@@ -1,0 +1,390 @@
+fileFormatVersion: 2
+guid: 497c93412cbb355479b33e5e4eb38aa8
+TextureImporter:
+  internalIDToNameTable: []
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 0
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 3
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 3
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: Ecos da mente UIUX (6)_0
+      rect:
+        serializedVersion: 2
+        x: 173
+        y: 711
+        width: 295
+        height: 311
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e45356ebc32e3864da0c02c06b9e63bd
+      internalID: -989531371
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ecos da mente UIUX (6)_2
+      rect:
+        serializedVersion: 2
+        x: 599
+        y: 711
+        width: 295
+        height: 309
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 9daceb294289de44fad4d0235bb332e4
+      internalID: 1976892079
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ecos da mente UIUX (6)_4
+      rect:
+        serializedVersion: 2
+        x: 1025
+        y: 705
+        width: 296
+        height: 315
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: bb8e0ce57da8b83438a4435768c663d2
+      internalID: 1611986441
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ecos da mente UIUX (6)_6
+      rect:
+        serializedVersion: 2
+        x: 1451
+        y: 705
+        width: 296
+        height: 315
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 049349263a3e68d4a88a82780b1dc108
+      internalID: -722140135
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ecos da mente UIUX (6)_8
+      rect:
+        serializedVersion: 2
+        x: 197
+        y: 381
+        width: 245
+        height: 254
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 5151572fa662ce94c896029e88b86643
+      internalID: -2088562401
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ecos da mente UIUX (6)_10
+      rect:
+        serializedVersion: 2
+        x: 623
+        y: 375
+        width: 244
+        height: 256
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 0c2125ef4d4348e4f8f4dd693191c8cc
+      internalID: -549637732
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ecos da mente UIUX (6)_12
+      rect:
+        serializedVersion: 2
+        x: 1032
+        y: 360
+        width: 282
+        height: 286
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d1d9b6ae2d452b0468b15d2fece17c2e
+      internalID: -1967731365
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ecos da mente UIUX (6)_14
+      rect:
+        serializedVersion: 2
+        x: 1459
+        y: 353
+        width: 280
+        height: 295
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 6d7d7530b97339c4187d2f57a1327aee
+      internalID: 1886325402
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ecos da mente UIUX (6)_16
+      rect:
+        serializedVersion: 2
+        x: 183
+        y: 25
+        width: 276
+        height: 281
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 52d63a3c5219d7d428e0caa451179d97
+      internalID: -807263637
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ecos da mente UIUX (6)_18
+      rect:
+        serializedVersion: 2
+        x: 528
+        y: 24
+        width: 284
+        height: 290
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 6f850f0dc9a053343a126916b427208e
+      internalID: 228192974
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ecos da mente UIUX (6)_20
+      rect:
+        serializedVersion: 2
+        x: 1018
+        y: 18
+        width: 278
+        height: 290
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 90144fe57e27b2d4095fb2a975220437
+      internalID: 1902524773
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ecos da mente UIUX (6)_22
+      rect:
+        serializedVersion: 2
+        x: 1503
+        y: 24
+        width: 284
+        height: 284
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b99da2c74a286ca42967b0a154f32be0
+      internalID: 1373996300
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    physicsShape: []
+    bones: []
+    spriteID: a10456c00cf1607448ee1e9106ec0edc
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    nameFileIdTable:
+      Ecos da mente UIUX (6)_0: -989531371
+      Ecos da mente UIUX (6)_1: -1914074060
+      Ecos da mente UIUX (6)_10: -549637732
+      Ecos da mente UIUX (6)_11: -1991748343
+      Ecos da mente UIUX (6)_12: -1967731365
+      Ecos da mente UIUX (6)_13: 1832335504
+      Ecos da mente UIUX (6)_14: 1886325402
+      Ecos da mente UIUX (6)_15: 59057568
+      Ecos da mente UIUX (6)_16: -807263637
+      Ecos da mente UIUX (6)_17: 148696785
+      Ecos da mente UIUX (6)_18: 228192974
+      Ecos da mente UIUX (6)_19: 912314292
+      Ecos da mente UIUX (6)_2: 1976892079
+      Ecos da mente UIUX (6)_20: 1902524773
+      Ecos da mente UIUX (6)_21: -605554070
+      Ecos da mente UIUX (6)_22: 1373996300
+      Ecos da mente UIUX (6)_23: -1692185490
+      Ecos da mente UIUX (6)_3: -1871811131
+      Ecos da mente UIUX (6)_4: 1611986441
+      Ecos da mente UIUX (6)_5: -1364465637
+      Ecos da mente UIUX (6)_6: -722140135
+      Ecos da mente UIUX (6)_7: -1420769415
+      Ecos da mente UIUX (6)_8: -2088562401
+      Ecos da mente UIUX (6)_9: 749179874
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

@@ -7,8 +7,8 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: Hidden_GlitchFullScreen
-  m_Shader: {fileID: 4800000, guid: 39f31493872da5f49b135a78288dd2e7, type: 3}
+  m_Name: LiquidShaderMat
+  m_Shader: {fileID: 4800000, guid: 7bf35ae83a936474faaafc810725cb29, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
@@ -25,11 +25,17 @@ Material:
     m_TexEnvs: []
     m_Ints: []
     m_Floats:
-    - _BlockSize: 66
-    - _ColorSplit: 2.06
-    - _Intensity: 0.28692713
-    - _Jitter: 1
-    - _Scanlines: 0.83
-    - _TimeScale: 1
-    m_Colors: []
+    - _Alpha: 0.8
+    - _EmissionStrength: 2
+    - _FillLevel: 0.528
+    - _RefractionStrength: 0.0257
+    - _RimPower: 3.42
+    - _Smoothness: 0.5
+    - _TiltMultiplier: 3
+    - _WaveAmplitude: 0.03
+    - _WaveSpeed: 2
+    m_Colors:
+    - _Color: {r: 1, g: 0.6, b: 0, a: 1}
+    - _RimColor: {r: 0.7924528, g: 0.76262695, b: 0.42239228, a: 1}
+    - _Tilt: {r: 0, g: 0, b: 0, a: 0}
   m_BuildTextureStacks: []

@@ -40,6 +40,9 @@ public class GerenciadorDePeso : MonoBehaviour
         GarantirReferencias();
         RegistrarRotacaoBase();
         SincronizarNiveisComObjetos();
+        
+        balanceController.externalAngleOffset = 0f;
+
     }
 
     void Update()

@@ -50,9 +50,11 @@ public class BalanceController : MonoBehaviour
 
 #if UNITY_ANDROID && !UNITY_EDITOR
     private AndroidJavaObject vibrator;
+    private bool modoWaveformDisponivel = false;   // createWaveform com amplitudes
+    private bool hasAmplitudeControl = false;      // suporte real de amplitude
+    private int sdkInt = 0;
 #endif
 
-    // --- Novo: offset neutro de calibração
     private float neutralOffset = 0f;
 
     private void Awake()
@@ -65,13 +67,52 @@ public class BalanceController : MonoBehaviour
             using (var unityPlayer = new AndroidJavaClass("com.unity3d.player.UnityPlayer"))
             {
                 AndroidJavaObject activity = unityPlayer.GetStatic<AndroidJavaObject>("currentActivity");
-                vibrator = activity.Call<AndroidJavaObject>("getSystemService", "vibrator");
-                Debug.Log("[BalanceController] Vibrator inicializado.");
+
+                using (var version = new AndroidJavaClass("android.os.Build$VERSION"))
+                {
+                    sdkInt = version.GetStatic<int>("SDK_INT");
+                }
+
+                // Android 12+ prefere VibratorManager
+                if (sdkInt >= 31)
+                {
+                    AndroidJavaObject vibManager =
+                        activity.Call<AndroidJavaObject>("getSystemService", "vibrator_manager");
+                    if (vibManager != null)
+                        vibrator = vibManager.Call<AndroidJavaObject>("getDefaultVibrator");
+                    if (vibrator == null) // fallback
+                        vibrator = activity.Call<AndroidJavaObject>("getSystemService", "vibrator");
+                }
+                else
+                {
+                    vibrator = activity.Call<AndroidJavaObject>("getSystemService", "vibrator");
+                }
+
+                if (vibrator != null)
+                    Debug.Log("[BalanceController] Vibrator inicializado corretamente.");
+                else
+                    Debug.LogWarning("[BalanceController] Vibrator retornou null.");
             }
         }
         catch (System.Exception e)
         {
             Debug.LogWarning("[BalanceController] Falha ao inicializar Vibrator: " + e.Message);
+        }
+
+        // Capacidades do vibrador
+        try
+        {
+            if (vibrator != null)
+            {
+                try { hasAmplitudeControl = vibrator.Call<bool>("hasAmplitudeControl"); } catch { hasAmplitudeControl = false; }
+                // createWaveform(long[], int[], int) existe desde API 26; assume disponível se temos vibrator
+                modoWaveformDisponivel = (sdkInt >= 26);
+                Debug.Log($"[BalanceController] SDK={sdkInt} hasAmp={hasAmplitudeControl} waveform={modoWaveformDisponivel}");
+            }
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogWarning("[BalanceController] Capabilities check failed: " + e.Message);
         }
 
         try
@@ -130,7 +171,6 @@ public class BalanceController : MonoBehaviour
         StartCoroutine(CalibrarSensor());
     }
 
-    // --- Calibra offset inicial do acelerômetro (mantém a balança nivelada)
     private IEnumerator CalibrarSensor()
     {
         yield return new WaitForSeconds(0.3f);
@@ -159,7 +199,7 @@ public class BalanceController : MonoBehaviour
             Input.deviceOrientation == DeviceOrientation.Unknown)
             Screen.orientation = ScreenOrientation.LandscapeLeft;
 
-        float raw = LerTiltParaLandscapeLeft() - neutralOffset; // <-- usa offset calibrado
+        float raw = LerTiltParaLandscapeLeft() - neutralOffset;
         float use = raw;
 
         if (lowPassEnabled)
@@ -208,7 +248,9 @@ public class BalanceController : MonoBehaviour
         else if (usandoGyro)
             acc = Input.gyro.gravity;
 
-        return eixoInvertido ? acc.y : -acc.y;
+        // Landscape Left → eixo horizontal principal é X
+        float eixo = eixoInvertido ? acc.x : -acc.x;
+        return eixo;
     }
 
 #if UNITY_ANDROID && !UNITY_EDITOR
@@ -217,16 +259,24 @@ public class BalanceController : MonoBehaviour
         try
         {
             using (var build = new AndroidJavaClass("android.os.Build"))
+            using (var version = new AndroidJavaClass("android.os.Build$VERSION"))
             {
                 string modelo = build.GetStatic<string>("MODEL") ?? "Unknown";
-                string versao = build.GetStatic<string>("VERSION_RELEASE") ?? "Unknown";
+                string versao = version.GetStatic<string>("RELEASE") ?? "Unknown";
 
                 if (versao.StartsWith("15") || versao.StartsWith("16") ||
                     modelo.ToLower().Contains("edge") || modelo.ToLower().Contains("s24") ||
                     modelo.ToLower().Contains("motorola"))
                 {
                     eixoInvertido = true;
-                    Debug.Log($"[BalanceController] Eixo ajustado (Y) para {modelo} / Android {versao}");
+                    Debug.Log($"[BalanceController] Eixo ajustado (X) para {modelo} / Android {versao}");
+                }
+
+                // Ajuste fino específico (se quiser manter)
+                if (modelo.ToLower().Contains("edge 60"))
+                {
+                    neutralOffset = 0.06f;
+                    Debug.Log("[BalanceController] Offset neutro ajustado +0.06f para Motorola Edge 60 Pro");
                 }
             }
         }
@@ -236,10 +286,15 @@ public class BalanceController : MonoBehaviour
         }
     }
 
-    // --- vibração contínua adaptativa (corrigida para resposta mais rápida)
+    // --- Vibração contínua com intensidade variável (com fallback PWM) ---
     private float ultimaIntensidade = 0f;
     private bool vibrando = false;
+    private bool usandoWaveform = false;
     private float tempoUltimaAtualizacao = 0f;
+
+    // parâmetros do loop tátil
+    private const float MIN_DELTA_INTENSIDADE = 0.06f;   // mudança mínima para atualizar
+    private const float MIN_INTERVALO_REAPLICAR = 0.18f; // s — mantém “contínuo”, sem spam
 
     private void AtualizarVibracao(float angulo)
     {
@@ -247,41 +302,112 @@ public class BalanceController : MonoBehaviour
 
         float intensidade = Mathf.Clamp01(Mathf.Abs(angulo) / maxAngle);
 
-        // só envia atualização se a diferença for perceptível
-        if (Mathf.Abs(intensidade - ultimaIntensidade) > 0.05f || Time.time - tempoUltimaAtualizacao > 0.25f)
+        // zona morta para vibração
+        if (intensidade <= 0.05f)
         {
-            if (intensidade <= 0.05f)
+            if (vibrando)
             {
-                if (vibrando)
-                {
-                    try { vibrator.Call("cancel"); } catch { }
-                    vibrando = false;
-                }
-                ultimaIntensidade = 0f;
-                return;
+                try { vibrator.Call("cancel"); } catch { }
+                vibrando = false;
+                usandoWaveform = false;
             }
+            ultimaIntensidade = 0f;
+            return;
+        }
 
-            long duracao = 80;
-            int amplitude = Mathf.RoundToInt(50 + intensidade * 205);
+        // aplica somente quando muda o suficiente ou passou um período
+        if (Mathf.Abs(intensidade - ultimaIntensidade) < MIN_DELTA_INTENSIDADE &&
+            (Time.time - tempoUltimaAtualizacao) < MIN_INTERVALO_REAPLICAR)
+        {
+            return;
+        }
 
-            try
+        try
+        {
+            bool hasVibrator = vibrator.Call<bool>("hasVibrator");
+            if (!hasVibrator) return;
+
+            if (modoWaveformDisponivel)
             {
-                using (var vibrationEffectClass = new AndroidJavaClass("android.os.VibrationEffect"))
+                if (hasAmplitudeControl)
                 {
-                    AndroidJavaObject effect = vibrationEffectClass.CallStatic<AndroidJavaObject>(
-                        "createOneShot", duracao, amplitude);
-                    vibrator.Call("vibrate", effect);
+                    // Waveform com amplitude dinâmica (contínuo)
+                    // Padrão: [0ms start, vibra Dv ms, pausa Dp ms], amplitudes [0, amp, 0], repete a partir do índice 0.
+                    long vibraMs = Mathf.RoundToInt(Mathf.Lerp(80f, 160f, intensidade));  // pulsos mais longos com mais inclinação
+                    long pausaMs = Mathf.RoundToInt(Mathf.Lerp(80f, 30f, intensidade));   // pausas menores com mais inclinação
+                    int amp = Mathf.Clamp(Mathf.RoundToInt(Mathf.Lerp(60f, 255f, intensidade)), 1, 255);
+
+                    using (var vibrationEffectClass = new AndroidJavaClass("android.os.VibrationEffect"))
+                    {
+                        long[] timings = new long[] { 0, vibraMs, pausaMs };
+                        int[] amps = new int[] { 0, amp, 0 };
+
+                        AndroidJavaObject effect = vibrationEffectClass.CallStatic<AndroidJavaObject>(
+                            "createWaveform", timings, amps, 0 // repeatIndex = 0 (loop)
+                        );
+
+                        // Alguns devices suportam hint (nem todos)
+                        try { effect.Call("setUsageHint", 2); } catch { /* ignore */ }
+
+                        vibrator.Call("vibrate", effect);
+                    }
+
+                    usandoWaveform = true;
+                    vibrando = true;
                 }
-                vibrando = true;
+                else
+                {
+                    // Sem amplitude control real → PWM com oneShot em loop (curto)
+                    VibrarOneShotPWM(intensidade);
+                }
             }
-            catch
+            else
             {
-                vibrator.Call("vibrate", 100);
-                vibrando = true;
+                // API antiga → PWM por oneShot
+                VibrarOneShotPWM(intensidade);
             }
 
             ultimaIntensidade = intensidade;
             tempoUltimaAtualizacao = Time.time;
+        }
+        catch (System.Exception)
+        {
+            // Último fallback
+            VibrarOneShotPWM(intensidade);
+            ultimaIntensidade = intensidade;
+            tempoUltimaAtualizacao = Time.time;
+        }
+    }
+
+    // PWM por oneShot para simular “força”: duração/pausa variam conforme intensidade
+    private void VibrarOneShotPWM(float intensidade)
+    {
+        try
+        {
+            long duracao = Mathf.RoundToInt(Mathf.Lerp(40f, 160f, intensidade));
+            // dispara um pulso; na próxima atualização (MIN_INTERVALO_REAPLICAR) chamamos de novo
+            int amplitude = hasAmplitudeControl
+                ? Mathf.Clamp(Mathf.RoundToInt(Mathf.Lerp(80f, 255f, intensidade)), 1, 255)
+                : -1; // default amplitude
+
+            using (var vibrationEffectClass = new AndroidJavaClass("android.os.VibrationEffect"))
+            {
+                int defaultAmp = vibrationEffectClass.GetStatic<int>("DEFAULT_AMPLITUDE");
+                AndroidJavaObject effect = vibrationEffectClass.CallStatic<AndroidJavaObject>(
+                    "createOneShot", duracao, (hasAmplitudeControl ? amplitude : defaultAmp)
+                );
+                vibrator.Call("vibrate", effect);
+            }
+
+            vibrando = true;
+            usandoWaveform = false; // estamos em modo PWM/oneShot
+        }
+        catch
+        {
+            // Ultimate fallback simples
+            try { vibrator.Call("vibrate", 100); } catch { }
+            vibrando = true;
+            usandoWaveform = false;
         }
     }
 #else
@@ -289,7 +415,7 @@ public class BalanceController : MonoBehaviour
     {
         float intensidade = Mathf.Clamp01(Mathf.Abs(angulo) / maxAngle);
         if (intensidade > 0.05f)
-            Debug.Log($"[Simulação Vibracao Contínua] intensidade={intensidade:F2}");
+            Debug.Log($"[Simulação Vibracao] intensidade={intensidade:F2}");
     }
 #endif
 
@@ -298,6 +424,6 @@ public class BalanceController : MonoBehaviour
     {
         baseRotationLocal = pendulo.localRotation;
         currentAngle = 0f;
-        StartCoroutine(CalibrarSensor()); // adiciona recalibração do sensor também
+        StartCoroutine(CalibrarSensor());
     }
 }

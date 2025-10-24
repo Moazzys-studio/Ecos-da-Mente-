@@ -26,15 +26,23 @@ public class TurnosManager : MonoBehaviour
     [Header("Animador (bools usadas)")]
     [SerializeField] private string boolCharging = "Charging";
 
+    [Header("Gerenciador de Peso")]
+    [SerializeField] private GerenciadorDePeso gerenciadorDePeso;
+    [Tooltip("Velocidade para a bateria esquerda encher (0→1 por segundo).")]
+    [SerializeField] private float velocidadeCarga = 0.25f;
+
     // Posições iniciais
-    [SerializeField] private Vector3 posInicialSupervisor;
-    [SerializeField] private Vector3 posInicialHelly;
+    private Vector3 posInicialSupervisor;
+    private Vector3 posInicialHelly;
 
     // Cache de componentes
-    [SerializeField] private NavMeshAgent agenteSup;
-    [SerializeField] private Animator animSup;
-    [SerializeField] private NavMeshAgent agenteHelly;
-    [SerializeField] private Animator animHelly;
+    private NavMeshAgent agenteSup;
+    private Animator     animSup;
+    private NavMeshAgent agenteHelly;
+    private Animator     animHelly;
+
+    // Estado interno
+    private bool supervisorCarregando = false;
 
     private void Start()
     {
@@ -42,7 +50,7 @@ public class TurnosManager : MonoBehaviour
         {
             posInicialSupervisor = supervisor.transform.position;
             agenteSup = supervisor.GetComponent<NavMeshAgent>();
-            animSup = supervisor.GetComponent<Animator>();
+            animSup   = supervisor.GetComponent<Animator>();
             if (agenteSup != null)
             {
                 agenteSup.speed = velocidadeAgente;
@@ -54,34 +62,25 @@ public class TurnosManager : MonoBehaviour
         {
             posInicialHelly = helly.transform.position;
             agenteHelly = helly.GetComponent<NavMeshAgent>();
-            animHelly = helly.GetComponent<Animator>();
+            animHelly   = helly.GetComponent<Animator>();
             if (agenteHelly != null)
             {
                 agenteHelly.speed = velocidadeAgente;
                 agenteHelly.stoppingDistance = distanciaParada;
             }
         }
+
+        if (gerenciadorDePeso == null)
+            gerenciadorDePeso = FindFirstObjectByType<GerenciadorDePeso>();
     }
 
     private void Update()
     {
         if (!turnoEmAndamento)
         {
-            if (iniciarTurno1)
-            {
-                IniciarTurno(1);
-                iniciarTurno1 = false;
-            }
-            else if (iniciarTurno2)
-            {
-                IniciarTurno(2);
-                iniciarTurno2 = false;
-            }
-            else if (iniciarTurno3)
-            {
-                IniciarTurno(3);
-                iniciarTurno3 = false;
-            }
+            if (iniciarTurno1) { IniciarTurno(1); iniciarTurno1 = false; }
+            else if (iniciarTurno2) { IniciarTurno(2); iniciarTurno2 = false; }
+            else if (iniciarTurno3) { IniciarTurno(3); iniciarTurno3 = false; }
         }
 
         if (encerrarTurnoAtual)
@@ -91,74 +90,114 @@ public class TurnosManager : MonoBehaviour
         }
 
         AtualizarMovimentoNPCs();
+        AtualizarCargaSupervisor();
     }
 
     private void IniciarTurno(int turno)
     {
         turnoAtual = turno;
         turnoEmAndamento = true;
+        supervisorCarregando = false;
 
-        switch (turno)
+        if (turno == 1)
         {
-            case 1:
-                MoverNPC(agenteSup, destinoSupervisor.position);
-                break;
+            // Começa equilibrado visualmente
+            if (gerenciadorDePeso != null)
+            {
+                gerenciadorDePeso.nivelEsquerda = 0.5f;
+                gerenciadorDePeso.nivelDireita  = 0.5f;
+            }
 
-            case 2:
-                MoverNPC(agenteHelly, destinoHelly.position);
-                break;
-
-            case 3:
-                MoverNPC(agenteSup, destinoSupervisor.position);
-                MoverNPC(agenteHelly, destinoHelly.position);
-                break;
+            MoverNPC(agenteSup, destinoSupervisor != null ? destinoSupervisor.position : supervisor.transform.position);
+        }
+        else if (turno == 2)
+        {
+            MoverNPC(agenteHelly, destinoHelly != null ? destinoHelly.position : helly.transform.position);
+        }
+        else if (turno == 3)
+        {
+            if (agenteSup != null)
+                MoverNPC(agenteSup, destinoSupervisor != null ? destinoSupervisor.position : supervisor.transform.position);
+            if (agenteHelly != null)
+                MoverNPC(agenteHelly, destinoHelly != null ? destinoHelly.position : helly.transform.position);
         }
     }
 
     private void EncerrarTurno()
     {
         turnoEmAndamento = false;
+        supervisorCarregando = false;
 
-        // Volta para posição inicial
-        if (agenteSup != null)
-            MoverNPC(agenteSup, posInicialSupervisor, false);
+        // Volta NPCs
+        if (agenteSup != null)   MoverNPC(agenteSup, posInicialSupervisor, false);
+        if (agenteHelly != null) MoverNPC(agenteHelly, posInicialHelly, false);
 
-        if (agenteHelly != null)
-            MoverNPC(agenteHelly, posInicialHelly, false);
-
-        if (animSup != null) animSup.SetBool(boolCharging, false);
+        // Reseta animações
+        if (animSup != null)   animSup.SetBool(boolCharging, false);
         if (animHelly != null) animHelly.SetBool(boolCharging, false);
     }
 
-    private void MoverNPC(NavMeshAgent agente, Vector3 destino, bool ativarCharging = true)
+    private void MoverNPC(NavMeshAgent agente, Vector3 destino, bool desligarCharging = true)
     {
         if (agente == null) return;
 
         agente.isStopped = false;
         agente.SetDestination(destino);
 
-        Animator anim = agente.GetComponent<Animator>();
-        if (anim != null)
-            anim.SetBool(boolCharging, false);
+        if (desligarCharging)
+        {
+            Animator a = agente.GetComponent<Animator>();
+            if (a != null) a.SetBool(boolCharging, false);
+        }
     }
 
     private void AtualizarMovimentoNPCs()
     {
-        if (agenteSup != null && turnoAtual != 0)
-            VerificarChegada(agenteSup, animSup);
-
-        if (agenteHelly != null && (turnoAtual == 2 || turnoAtual == 3))
-            VerificarChegada(agenteHelly, animHelly);
+        // Só precisamos checar o supervisor no Turno 1 por enquanto
+        if (agenteSup != null && turnoAtual == 1)
+            VerificarChegadaSupervisor();
     }
 
-    private void VerificarChegada(NavMeshAgent agente, Animator anim)
+    private void VerificarChegadaSupervisor()
     {
-        if (agente.remainingDistance <= agente.stoppingDistance && !agente.pathPending)
-        {
-            if (anim != null)
-                anim.SetBool(boolCharging, true);
+        if (agenteSup.pathPending) return;
 
-            agente.isStopped = true;
+        bool chegou = agenteSup.remainingDistance <= agenteSup.stoppingDistance;
+        if (!chegou) return;
+
+        if (!supervisorCarregando)
+        {
+            // Para de andar e entra no estado de carregar
+            agenteSup.isStopped = true;
+            animSup?.SetBool(boolCharging, true);
+            supervisorCarregando = true;
+
+            // Zera os líquidos para iniciar a “carga” da esquerda 0→100
+            if (gerenciadorDePeso != null)
+            {
+                gerenciadorDePeso.nivelEsquerda = 0f;
+                gerenciadorDePeso.nivelDireita  = 0f;
+            }
         }
+    }
+
+    private void AtualizarCargaSupervisor()
+    {
+        // Somente no Turno 1 e após o supervisor iniciar a carga
+        if (turnoAtual != 1 || !supervisorCarregando || gerenciadorDePeso == null) return;
+
+        // Interpola a bateria esquerda de 0 até 1 (100%)
+        gerenciadorDePeso.nivelEsquerda = Mathf.MoveTowards(
+            gerenciadorDePeso.nivelEsquerda, 1f, Time.deltaTime * velocidadeCarga
+        );
+
+        // Mantém a direita como está (0 no começo), o jogador compensa no pêndulo.
+        // O GerenciadorDePeso aplica o peso → externalAngleOffset no BalanceController.
+
+        // Atualização visual imediata (opcional – o Gerenciador já faz no Update)
+        if (gerenciadorDePeso.bateriaEsquerda != null)
+            gerenciadorDePeso.bateriaEsquerda.fillLevel = gerenciadorDePeso.nivelEsquerda;
+        if (gerenciadorDePeso.bateriaDireita != null)
+            gerenciadorDePeso.bateriaDireita.fillLevel = gerenciadorDePeso.nivelDireita;
     }
 }

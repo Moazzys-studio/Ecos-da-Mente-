@@ -11,8 +11,7 @@ public class LiquidoBateria : MonoBehaviour
     void Start()
     {
         mat = liquidoRenderer.material;
-        if (Accelerometer.current == null)
-            Debug.LogWarning("⚠️ Nenhum acelerômetro detectado — teste no dispositivo físico.");
+       
     }
 
     void Update()

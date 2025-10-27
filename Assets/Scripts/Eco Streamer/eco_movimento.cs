@@ -1,107 +1,175 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.EnhancedTouch;
 
+[RequireComponent(typeof(Rigidbody))]
 public class eco_movimento : MonoBehaviour
 {
-public float verticalSpeed = 10f;       
-public float maxVerticalSpeed = 15f;    
-public LayerMask groundLayer;           
-public float groundCheckDistance = 0.6f;
-public float rotationDelay = 0.1f;      
-public float rotationDuration = 0.25f;  
+    [Header("Velocidade vertical")]
+    public float velocidadeVertical = 10f;
+    public float maxVelocidadeVertical = 15f;
 
-private Rigidbody rb;
-private bool movingUp = false; 
-private Coroutine rotationCoroutine;
+    [Header("Detecção de colisão acima/baixo")]
+    public LayerMask camadasSolo;
+    public float distanciaChecagem = 0.4f;
 
-void Start()
-{
-    rb = GetComponent<Rigidbody>();
-    rb.useGravity = false; // usamos nosso controle manual
-    rb.collisionDetectionMode = CollisionDetectionMode.Continuous;
-    rb.freezeRotation = true;
-}
+    [Header("Rotação suave")]
+    public float atrasoRotacao = 0.1f;
+    public float duracaoRotacao = 0.25f;
 
-void Update()
-{
-    // Clique do mouse PC OU toque na tela
-    if (Input.GetMouseButtonDown(0))
+    [Header("Novo Input System")]
+    public InputActionReference acaoAlternarRef;
+
+    [Header("Animações")]
+    public string animacaoCaindo = "Caindo";
+    public float tempoMinimoCaindo = 0.5f;
+
+    [Header("Gravidade personalizada")]
+    public float gravidade = 20f;
+
+    private Rigidbody _rb;
+    private Animator _anim;
+    private bool _subindo = false;
+    private Coroutine _rotacaoCo;
+    private bool _estaNoChao;
+
+    private InputAction _acaoAlternarFallback;
+    
+    void Awake()
     {
-        movingUp = !movingUp;
-        ApplyVerticalVelocity();
-        StartSmoothRotation();  // <<< rotação suave com delay
-    }
-}
+        _rb = GetComponent<Rigidbody>();
+        _rb.useGravity = false;
+        _rb.collisionDetectionMode = CollisionDetectionMode.Continuous;
+        _rb.freezeRotation = true;
 
-void ApplyVerticalVelocity()
-{
-    float vy = movingUp ? verticalSpeed : -verticalSpeed;
-    Vector3 v = rb.velocity;
-    v.x = 0f;
-    v.z = 0f;
-    v.y = Mathf.Clamp(vy, -maxVerticalSpeed, maxVerticalSpeed);
-    rb.velocity = v;
-}
+        _anim = GetComponent<Animator>();
 
-void StartSmoothRotation()
-{
-    // Se já estiver rotacionando, para para não bugar
-    if (rotationCoroutine != null)
-        StopCoroutine(rotationCoroutine);
+        if (!EnhancedTouchSupport.enabled)
+            EnhancedTouchSupport.Enable();
 
-    rotationCoroutine = StartCoroutine(RotateSmoothly());
-}
-
-IEnumerator RotateSmoothly()
-{
-    // Delay antes de começar a girar
-    yield return new WaitForSeconds(rotationDelay);
-
-    float targetZ = movingUp ? 180f : 0f;
-    Quaternion startRot = transform.rotation;
-    Quaternion endRot = Quaternion.Euler(0f, 90f, targetZ);
-
-    float time = 0f;
-
-    while (time < rotationDuration)
-    {
-        time += Time.deltaTime;
-        transform.rotation = Quaternion.Lerp(startRot, endRot, time / rotationDuration);
-        yield return null;
+        if (acaoAlternarRef == null)
+        {
+            _acaoAlternarFallback = new InputAction("AlternarMover");
+            _acaoAlternarFallback.AddBinding("<Pointer>/press");
+            _acaoAlternarFallback.AddBinding("<Keyboard>/space");
+        }
     }
 
-    transform.rotation = endRot; // garante rotação final precisa
-}
-
-void FixedUpdate()
-{
-    // Se estiver encostado no chão e movendo pra baixo, zera velocidade
-    if (!movingUp && IsGroundedBelow())
+    void OnEnable()
     {
-        Vector3 v = rb.velocity;
-        v.y = 0f;
-        rb.velocity = v;
+        var action = acaoAlternarRef != null ? acaoAlternarRef.action : _acaoAlternarFallback;
+        if (action != null)
+        {
+            action.Enable();
+            action.started += OnAlternarStarted;
+        }
     }
 
-    // Se estiver encostado no teto e movendo pra cima, zera velocidade
-    if (movingUp && IsGroundedAbove())
+    void OnDisable()
     {
-        Vector3 v = rb.velocity;
-        v.y = 0f;
-        rb.velocity = v;
+        var action = acaoAlternarRef != null ? acaoAlternarRef.action : _acaoAlternarFallback;
+        if (action != null)
+        {
+            action.started -= OnAlternarStarted;
+            if (acaoAlternarRef == null) action.Disable();
+        }
     }
-}
 
-bool IsGroundedBelow()
-{
-    // verifica colisão logo abaixo
-    return Physics.Raycast(transform.position, Vector3.down, groundCheckDistance, groundLayer);
-}
+    private void OnAlternarStarted(InputAction.CallbackContext ctx)
+    {
+        _subindo = !_subindo;
+        AplicarVelocidadeVertical();
+        IniciarRotacaoSuave();
+    }
 
-bool IsGroundedAbove()
-{
-    // verifica colisão logo acima
-    return Physics.Raycast(transform.position, Vector3.up, groundCheckDistance, groundLayer);
-}
+    private void AplicarVelocidadeVertical()
+    {
+        float vy = _subindo ? velocidadeVertical : -velocidadeVertical;
+
+        Vector3 v = _rb.velocity;
+        v.x = 0f;
+        v.z = 0f;
+        v.y = Mathf.Clamp(vy, -maxVelocidadeVertical, maxVelocidadeVertical);
+        _rb.velocity = v;
+    }
+
+    private void IniciarRotacaoSuave()
+    {
+        if (_rotacaoCo != null) StopCoroutine(_rotacaoCo);
+        _rotacaoCo = StartCoroutine(RotacionarSuave());
+    }
+
+    private IEnumerator RotacionarSuave()
+    {
+        yield return new WaitForSeconds(atrasoRotacao);
+
+        if (_anim != null)
+            _anim.SetBool(animacaoCaindo, true);
+
+        float alvoZ = _subindo ? 180f : 0f;
+        Quaternion rotInicial = transform.rotation;
+        Quaternion rotFinal = Quaternion.Euler(0f, 90f, alvoZ);
+
+        float t = 0f;
+        while (t < duracaoRotacao)
+        {
+            t += Time.deltaTime;
+            transform.rotation = Quaternion.Lerp(rotInicial, rotFinal, t / duracaoRotacao);
+            yield return null;
+        }
+
+        transform.rotation = rotFinal;
+
+        yield return new WaitForSeconds(tempoMinimoCaindo);
+
+        if (_anim != null)
+            _anim.SetBool(animacaoCaindo, false);
+    }
+
+    void FixedUpdate()
+    {
+        bool noChaoAgora = EstaEncostadoAbaixo();
+
+        // Se tocar o chão, desativa animação de queda
+        if (!_estaNoChao && noChaoAgora)
+        {
+            if (_anim != null)
+                _anim.SetBool(animacaoCaindo, false);
+        }
+
+        _estaNoChao = noChaoAgora;
+
+        // Se está no chão e não está subindo → mantém parado
+        if (noChaoAgora && !_subindo)
+        {
+            var v = _rb.velocity; v.y = 0f; _rb.velocity = v;
+        }
+        // Se está no teto enquanto sobe → para de subir
+        else if (_subindo && EstaEncostadoAcima())
+        {
+            var v = _rb.velocity; v.y = 0f; _rb.velocity = v;
+        }
+        else
+        {
+            // Se não está subindo e NÃO tem chão → CAI
+            if (!_subindo && !noChaoAgora)
+            {
+                Vector3 v = _rb.velocity;
+                v.y -= gravidade * Time.fixedDeltaTime;
+                v.y = Mathf.Clamp(v.y, -maxVelocidadeVertical, maxVelocidadeVertical);
+                _rb.velocity = v;
+            }
+        }
+    }
+
+    private bool EstaEncostadoAbaixo()
+    {
+        return Physics.Raycast(transform.position, Vector3.down, distanciaChecagem, camadasSolo);
+    }
+
+    private bool EstaEncostadoAcima()
+    {
+        return Physics.Raycast(transform.position, Vector3.up, distanciaChecagem, camadasSolo);
+    }
 }

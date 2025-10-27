@@ -4,25 +4,31 @@ using UnityEngine;
 
 public class cenario : MonoBehaviour
 {
-   [Header("Cenário")]
-    public GameObject[] groundPrefabs;     // prefabs do chão
-    public float moveSpeed = 5f;           // velocidade do chão
-    public int initialBlocks = 6;          // blocos iniciais na tela
-    public float despawnOffset = -15f;     // ponto onde o chão é destruído
-    public float spawnOffset = 15f;        // ponto onde o chão começa a aparecer
+    [Header("Cenário")]
+    public GameObject[] groundPrefabs;     // Prefabs do chão
+    public float moveSpeed = 5f;           // Velocidade do cenário se movendo
+    public int initialBlocks = 6;          // Quantos blocos aparecem no início
+    public float despawnOffset = -15f;     // Posição onde o bloco é destruído
 
-    [Header("Itens e Obstáculos (opcional)")]
-    public GameObject[] itemPrefabs;       // prefabs de itens ou obstáculos
-    [Range(0f, 1f)] public float itemSpawnChance = 0.3f; // chance de spawn por bloco
-    public Vector2 itemHeightRange = new Vector2(1f, 3f); // altura aleatória dos itens
+    [Header("Posição Inicial")]
+    [Tooltip("Ajuste manualmente onde o cenário começa na tela (quanto mais negativo, mais à esquerda).")]
+    public float startOffset = -8f;        // Posição X inicial configurável no Inspector
+
+    [Header("Buracos (Desafios)")]
+    [Range(0f, 1f)]
+    public float holeChance; // chance de criar buraco
+    public float holeMinSize = 4f;   // Tamanho mínimo do buraco
+    public float holeMaxSize = 8f;   // Tamanho máximo do buraco
 
     private List<GameObject> spawnedBlocks = new List<GameObject>();
-    private float nextSpawnX = 0f;
-    private Camera mainCam;
+    private float nextSpawnX;
 
     void Start()
     {
-        mainCam = Camera.main;
+        // Começa no valor configurado pelo usuário no Inspector
+        nextSpawnX = startOffset;
+
+        // Spawna os blocos iniciais
         for (int i = 0; i < initialBlocks; i++)
             SpawnBlock();
     }
@@ -35,41 +41,57 @@ public class cenario : MonoBehaviour
 
     void SpawnBlock()
     {
-        GameObject prefab = groundPrefabs[Random.Range(0, groundPrefabs.Length)];
+        // Evita buracos nos dois primeiros blocos
+        if (spawnedBlocks.Count >= 2 && Random.value < holeChance)
+        {
+            float holeSize = Random.Range(holeMinSize, holeMaxSize);
+            nextSpawnX += holeSize;
+        }
+
+        GameObject prefab;
+
+        // Força as duas primeiras a serem sempre a prefab número 4 (índice 3)
+        if (spawnedBlocks.Count < 2 && groundPrefabs.Length >= 4)
+        {
+            prefab = groundPrefabs[3];
+        }
+        else
+        {
+            prefab = groundPrefabs[Random.Range(0, groundPrefabs.Length)];
+        }
+
         GameObject block = Instantiate(prefab);
 
-        // --- Pai com collider de Raycast (isTrigger) ---
-        Collider parentCol = block.GetComponent<Collider>();
-        if (parentCol == null)
-            parentCol = block.AddComponent<BoxCollider>();
-        parentCol.isTrigger = true; // não empurra o player
-        parentCol.gameObject.layer = LayerMask.NameToLayer("Ground"); // Raycast detecta
+        // Configura Rigidbody e Colliders
+        Rigidbody rb = block.GetComponent<Rigidbody>();
+        if (rb == null) rb = block.AddComponent<Rigidbody>();
+        rb.isKinematic = true;
+        rb.useGravity = false;
+        rb.collisionDetectionMode = CollisionDetectionMode.Continuous;
 
-        // --- Filho Empurrador com collider físico ---
+        Collider parentCol = block.GetComponent<Collider>();
+        if (parentCol == null) parentCol = block.AddComponent<BoxCollider>();
+        parentCol.isTrigger = true;
+
         Transform pushChild = block.transform.Find("Empurrador");
         if (pushChild != null)
         {
             Collider childCol = pushChild.GetComponent<Collider>();
             if (childCol == null)
                 childCol = pushChild.gameObject.AddComponent<BoxCollider>();
-
-            childCol.isTrigger = false; // esse é o que empurra
-            childCol.gameObject.layer = LayerMask.NameToLayer("Ground");
+            childCol.isTrigger = false;
         }
 
-        // Pega o tamanho do chão pelo Renderer (do filho ou do pai)
         Renderer rend = block.GetComponentInChildren<Renderer>();
-        float width = rend.bounds.size.x;
-        float yPos = prefab.transform.position.y;
+        float width = rend != null ? rend.bounds.size.x : 10f;
 
-        // Posiciona o bloco na sequência
+        // 🔹 Agora a altura (Y) é baseada na posição do objeto que tem o script
+        float yPos = transform.position.y;
+
         block.transform.position = new Vector3(nextSpawnX + width / 2f, yPos, 0f);
         nextSpawnX += width;
 
         spawnedBlocks.Add(block);
-
-        // Spawn de item opcional
-        TrySpawnItem(block, width, yPos);
     }
 
     void MoveBlocks()
@@ -78,10 +100,9 @@ public class cenario : MonoBehaviour
         {
             if (block == null) continue;
 
-            // Move o bloco inteiro
+            // Move bloco para esquerda
             block.transform.position += Vector3.left * moveSpeed * Time.deltaTime;
 
-            // --- Empurrar apenas a partir do filho ---
             Transform pushChild = block.transform.Find("Empurrador");
             if (pushChild == null) continue;
 
@@ -109,9 +130,13 @@ public class cenario : MonoBehaviour
         if (spawnedBlocks.Count == 0) return;
 
         GameObject first = spawnedBlocks[0];
+        if (first == null) return;
 
-        // Verifica se o bloco saiu da tela
-        if (first.transform.position.x < despawnOffset)
+        Renderer rend = first.GetComponentInChildren<Renderer>();
+        float width = rend != null ? rend.bounds.size.x : 10f;
+
+        // Se saiu da tela → remove e cria outro
+        if (first.transform.position.x + width / 2f < despawnOffset)
         {
             Destroy(first);
             spawnedBlocks.RemoveAt(0);
@@ -119,26 +144,18 @@ public class cenario : MonoBehaviour
         }
     }
 
-    void TrySpawnItem(GameObject block, float width, float groundY)
-    {
-        if (itemPrefabs.Length == 0 || Random.value > itemSpawnChance)
-            return;
-
-        GameObject itemPrefab = itemPrefabs[Random.Range(0, itemPrefabs.Length)];
-
-        Vector3 spawnPos = new Vector3(
-            block.transform.position.x,
-            groundY + Random.Range(itemHeightRange.x, itemHeightRange.y),
-            0f
-        );
-
-        Instantiate(itemPrefab, spawnPos, Quaternion.identity);
-    }
-
     void OnDrawGizmosSelected()
     {
-        // Apenas pra visualizar o limite de destruição
+        // Linha vermelha mostra o ponto de remoção
         Gizmos.color = Color.red;
         Gizmos.DrawLine(new Vector3(despawnOffset, -10f, 0), new Vector3(despawnOffset, 10f, 0));
+
+        // Linha azul mostra o início do spawn
+        Gizmos.color = Color.cyan;
+        Gizmos.DrawLine(new Vector3(startOffset, -10f, 0), new Vector3(startOffset, 10f, 0));
+
+        // Linha verde mostra a altura (Y) onde o cenário será instanciado
+        Gizmos.color = Color.green;
+        Gizmos.DrawLine(new Vector3(-30f, transform.position.y, 0), new Vector3(30f, transform.position.y, 0));
     }
 }

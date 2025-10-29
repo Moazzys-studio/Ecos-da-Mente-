@@ -2,70 +2,120 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 
+/// <summary>
+/// Reconhece gestos desenhados (Círculo e V) a partir dos pontos fornecidos pela
+/// MecanicaDesenhoNaTela (evento AoFinalizarTraco). Executa ações e dispara eventos.
+/// </summary>
 [DisallowMultipleComponent]
 public class MecanicaReconhecerFormas : MonoBehaviour
 {
+    // ─────────────────────────────────────────────────────────────────────────────
+    // TIPOS E CONFIGURAÇÃO
+    // ─────────────────────────────────────────────────────────────────────────────
     public enum AcaoAposReconhecer { Nenhuma, InstanciarPrefab, DestruirAlvos }
     public enum PrioridadeForma { PrimeiroQueBater, PriorizarCirculo, PriorizarV }
     public enum SelectionScope { OnlyInsideGesture, AllOfType }
 
-    [Header("Refs")]
-    [SerializeField] private MecanicaDesenhoNaTela desenho;  // se vazio, pega no mesmo GO
+    [Header("Referências")]
+    [Tooltip("Se não for atribuído, este script tentará buscar no mesmo GameObject.")]
+    [SerializeField] private MecanicaDesenhoNaTela desenho;
+
+    [Header("Espaço do gesto (espelhar configuração do desenho)")]
+    [Tooltip("Se verdadeiro, o gesto está em Overlay (2D na tela). Se falso, o gesto está no Mundo (3D).")]
+    [SerializeField] private bool gestoEmOverlay = true;
+
+    [Tooltip("Se o gesto em overlay usa coordenadas LOCAIS da câmera (mesma opção do desenho).")]
+    [SerializeField] private bool overlayUsaEspacoLocal = true;
+
+    [Tooltip("Câmera usada para projetar mundo↔tela quando o gesto está em Overlay.")]
+    [SerializeField] private Camera cameraGesto;
+
+    [Tooltip("Quando o gesto está no Mundo (gestoEmOverlay = false): o plano usado para 2D é XY (true) ou XZ (false)?")]
+    [SerializeField] private bool gestoPlanoXY = true;
 
     // ============ CÍRCULO ============
     [Header("Círculo (aproximado) - thresholds em PX")]
+    [Tooltip("Comprimento mínimo do traço para tentar reconhecer círculo (em px).")]
     [SerializeField, Min(40f)] private float compMinTracoPx = 120f;
-    [Tooltip("Fim precisa estar a <= k * RaioMedio do início. 0.8 é tolerante.")]
+
+    [Tooltip("O traço deve fechar: dist(início,fim) ≤ tolerância * raio médio.")]
     [SerializeField, Min(0f)] private float toleranciaFechamentoR = 0.8f;
-    [Tooltip("Redondez = std/raio. <= 0.35 é permissivo.")]
+
+    [Tooltip("Redondez: std/raio. Valores ≤ 0.35 costumam ser permissivos.")]
     [SerializeField, Range(0.05f, 0.6f)] private float toleranciaRedondezRsd = 0.35f;
 
     // ============ V ============
     [Header("V (um único canto agudo) - thresholds em PX/Graus")]
+    [Tooltip("Habilita o reconhecimento do gesto em V.")]
     [SerializeField] private bool habilitarV = true;
+
+    [Tooltip("Comprimento mínimo do traço para V (em px).")]
     [SerializeField, Min(40f)] private float compMinTracoPx_V = 120f;
+
+    [Tooltip("Faixa de ângulo aceitável para o V (graus).")]
     [SerializeField, Range(10f, 170f)] private float anguloVMinDeg = 40f;
     [SerializeField, Range(10f, 170f)] private float anguloVMaxDeg = 110f;
-    [Tooltip("Retilineidade de cada perna (RMS normalizado). 0.12 tolerante; 0.06 rígido.")]
+
+    [Tooltip("Retilineidade (RMS normalizado) de cada perna do V (menor = mais rígido).")]
     [SerializeField, Range(0.02f, 0.3f)] private float toleranciaRetilineidadeRMS = 0.12f;
-    [Tooltip("Cada perna deve ter ao menos esta fração do comprimento total.")]
+
+    [Tooltip("Cada perna deve ter ao menos esta fração do comprimento total do traço.")]
     [SerializeField, Range(0.05f, 0.6f)] private float minFracaoPerna = 0.25f;
+
     [Tooltip("O vértice deve cair entre estas frações do comprimento total.")]
     [SerializeField, Range(0.0f, 1.0f)] private float posVerticeMinFrac = 0.25f;
     [SerializeField, Range(0.0f, 1.0f)] private float posVerticeMaxFrac = 0.75f;
 
     // ============ AÇÃO / PRIORIDADE ============
     [Header("Resolução quando várias formas batem")]
+    [Tooltip("Qual gesto prevalece se V e Círculo forem reconhecidos?")]
     [SerializeField] private PrioridadeForma prioridade = PrioridadeForma.PrimeiroQueBater;
 
     [Header("Ação ao reconhecer")]
+    [Tooltip("O que fazer quando o gesto é reconhecido?")]
     [SerializeField] private AcaoAposReconhecer acao = AcaoAposReconhecer.DestruirAlvos;
 
     [Tooltip("Usado apenas se 'InstanciarPrefab' estiver selecionado.")]
     [SerializeField] private GameObject prefabOnRecognized;
+
+    [Tooltip("Alinhar o prefab à direção da câmera ao instanciar? (somente se cameraGesto estiver definida)")]
     [SerializeField] private bool alignPrefabToCamera = false;
 
     [Header("Seleção de alvos por forma")]
+    [Tooltip("Escopo da seleção para o Círculo.")]
     [SerializeField] private SelectionScope selectionScopeCircle = SelectionScope.OnlyInsideGesture;
-    [SerializeField] private SelectionScope selectionScopeV = SelectionScope.OnlyInsideGesture;
 
-    [Tooltip("Marcadores/Tags do círculo")]
-    [SerializeField] private bool circleByComponent = true;   // DestroyOnCircle
+    [Tooltip("Destruir por componente DestroyOnCircle?")]
+    [SerializeField] private bool circleByComponent = true;
+
+    [Tooltip("Destruir por Tag também?")]
     [SerializeField] private bool circleByTag = false;
+
+    [Tooltip("Tag usada quando circleByTag = true.")]
     [SerializeField] private string circleTag = "DestruivelO";
-    [Tooltip("Multiplicador do raio do gesto para seleção (1.0..1.5 recomendado).")]
+
+    [Tooltip("Multiplicador do raio do gesto para seleção de círculo.")]
     [SerializeField, Min(0.5f)] private float circleSelectionRadiusMul = 1.1f;
 
-    [Tooltip("Marcadores/Tags do V")]
-    [SerializeField] private bool vByComponent = true;        // DestroyOnV
+    [Space]
+    [Tooltip("Escopo da seleção para o V.")]
+    [SerializeField] private SelectionScope selectionScopeV = SelectionScope.OnlyInsideGesture;
+
+    [Tooltip("Destruir por componente DestroyOnV?")]
+    [SerializeField] private bool vByComponent = true;
+
+    [Tooltip("Destruir por Tag também?")]
     [SerializeField] private bool vByTag = false;
+
+    [Tooltip("Tag usada quando vByTag = true.")]
     [SerializeField] private string vTag = "DestruivelV";
-    [Tooltip("Padding (em unidades do espaço 2D do gesto) para a AABB do traço.")]
+
+    [Tooltip("Padding (em unidades do espaço 2D do gesto) para a AABB do traço (V).")]
     [SerializeField, Min(0f)] private float vAabbPadding = 0.2f;
 
     // ============ EVENTOS ============
-    [System.Serializable] public class CircleEvent : UnityEvent<Vector3, float> {}    // (centro3D, raio)
-    [System.Serializable] public class VEvent      : UnityEvent<Vector3, float> {}    // (vertice3D, angDeg)
+    [System.Serializable] public class CircleEvent : UnityEvent<Vector3, float> {} // (centro3D, raio)
+    [System.Serializable] public class VEvent      : UnityEvent<Vector3, float> {} // (vertice3D, angDeg)
 
     [Header("Eventos - Círculo")]
     public CircleEvent OnCircleRecognized;
@@ -75,25 +125,38 @@ public class MecanicaReconhecerFormas : MonoBehaviour
     public VEvent OnVRecognized;
     public UnityEvent OnVRecognizedSimple;
 
+    // ─────────────────────────────────────────────────────────────────────────────
+    // LIFECYCLE
+    // ─────────────────────────────────────────────────────────────────────────────
     private void OnEnable()
     {
-        if (desenho == null) desenho = GetComponent<MecanicaDesenhoNaTela>();
-        if (desenho != null) desenho.OnStrokeFinished += HandleStrokeFinished;
-        else Debug.LogWarning("[MecanicaReconhecerFormas] Nenhum MecanicaDesenhoNaTela encontrado.");
+        if (!desenho) desenho = GetComponent<MecanicaDesenhoNaTela>();
+        if (desenho != null)
+        {
+            // NOVO: assinatura no evento em português
+            desenho.AoFinalizarTraco += HandleStrokeFinished;
+        }
+        else
+        {
+            Debug.LogWarning("[MecanicaReconhecerFormas] Nenhum MecanicaDesenhoNaTela encontrado.");
+        }
     }
 
     private void OnDisable()
     {
-        if (desenho != null) desenho.OnStrokeFinished -= HandleStrokeFinished;
+        if (desenho != null)
+            desenho.AoFinalizarTraco -= HandleStrokeFinished;
     }
 
-    private void HandleStrokeFinished(IReadOnlyList<Vector3> pts3D, IReadOnlyList<Vector2> pts2D, float unitsPerPixel)
+    // ─────────────────────────────────────────────────────────────────────────────
+    // PROCESSAMENTO DO GESTO
+    // ─────────────────────────────────────────────────────────────────────────────
+    private void HandleStrokeFinished(IReadOnlyList<Vector3> pts3D, IReadOnlyList<Vector2> pts2D, float unidadesPorPixel)
     {
-        if (pts3D == null || pts3D.Count < 8) return;
         if (pts2D == null || pts2D.Count < 8) return;
 
-        float minLenCircle = compMinTracoPx   * Mathf.Max(0.000001f, unitsPerPixel);
-        float minLenV      = compMinTracoPx_V * Mathf.Max(0.000001f, unitsPerPixel);
+        float minLenCircle = compMinTracoPx   * Mathf.Max(0.000001f, unidadesPorPixel);
+        float minLenV      = compMinTracoPx_V * Mathf.Max(0.000001f, unidadesPorPixel);
 
         bool gotCircle = false, gotV = false;
         Vector3 circleC3 = default; float circleR = 0f;
@@ -103,14 +166,10 @@ public class MecanicaReconhecerFormas : MonoBehaviour
         if (habilitarV && PathLength2D(pts2D) >= minLenV)
         {
             if (TryRecognizeV(pts2D, pts3D, out vIdx, out vAng, out v3))
-            {
-                if (vAng >= Mathf.Min(anguloVMinDeg, anguloVMaxDeg) &&
-                    vAng <= Mathf.Max(anguloVMinDeg, anguloVMaxDeg))
-                    gotV = true;
-            }
+                gotV = true;
         }
 
-        // ---- O ----
+        // ---- CÍRCULO ----
         if (PathLength2D(pts2D) >= minLenCircle)
         {
             if (TryRecognizeCircle(pts2D, out circleC3, out circleR, pts3D))
@@ -137,33 +196,30 @@ public class MecanicaReconhecerFormas : MonoBehaviour
         }
     }
 
-    // ================== AÇÕES ==================
+    // ─────────────────────────────────────────────────────────────────────────────
+    // AÇÕES
+    // ─────────────────────────────────────────────────────────────────────────────
     private void ExecutarAcaoCircle(IReadOnlyList<Vector2> pts2D, Vector3 center3, float radius)
     {
         switch (acao)
         {
-            case AcaoAposReconhecer.Nenhuma: return;
+            case AcaoAposReconhecer.Nenhuma:
+                return;
+
             case AcaoAposReconhecer.InstanciarPrefab:
-                if (prefabOnRecognized != null)
-                {
-                    Quaternion rot = Quaternion.identity;
-                    if (alignPrefabToCamera && desenho != null && desenho.EffectiveCamera != null)
-                        rot = Quaternion.LookRotation(desenho.EffectiveCamera.transform.forward, Vector3.up);
-                    Instantiate(prefabOnRecognized, center3, rot);
-                }
+                InstanciarPrefab(center3);
                 return;
 
             case AcaoAposReconhecer.DestruirAlvos:
                 if (selectionScopeCircle == SelectionScope.AllOfType)
                 {
-                    DestruirPorTipo(circle:true, filtroLocal:null, raioLocal:0f);
+                    DestruirPorTipo(circle:true, filtroLocal:null);
                 }
                 else
                 {
-                    // Disco em 2D
-                    Vector2 center2 = Centroid2D(pts2D); // coerente com o cálculo do raio médio
+                    Vector2 center2 = Centroid2D(pts2D); // coerente com raio médio
                     float rSel = radius * circleSelectionRadiusMul;
-                    DestruirPorTipo(circle:true, filtroLocal:(p2 => Vector2.Distance(p2, center2) <= rSel), raioLocal:rSel);
+                    DestruirPorTipo(circle:true, filtroLocal:(p2 => Vector2.Distance(p2, center2) <= rSel));
                 }
                 return;
         }
@@ -173,21 +229,17 @@ public class MecanicaReconhecerFormas : MonoBehaviour
     {
         switch (acao)
         {
-            case AcaoAposReconhecer.Nenhuma: return;
+            case AcaoAposReconhecer.Nenhuma:
+                return;
+
             case AcaoAposReconhecer.InstanciarPrefab:
-                if (prefabOnRecognized != null)
-                {
-                    Quaternion rot = Quaternion.identity;
-                    if (alignPrefabToCamera && desenho != null && desenho.EffectiveCamera != null)
-                        rot = Quaternion.LookRotation(desenho.EffectiveCamera.transform.forward, Vector3.up);
-                    Instantiate(prefabOnRecognized, v3, rot);
-                }
+                InstanciarPrefab(v3);
                 return;
 
             case AcaoAposReconhecer.DestruirAlvos:
                 if (selectionScopeV == SelectionScope.AllOfType)
                 {
-                    DestruirPorTipo(circle:false, filtroLocal:null, raioLocal:0f);
+                    DestruirPorTipo(circle:false, filtroLocal:null);
                 }
                 else
                 {
@@ -204,16 +256,27 @@ public class MecanicaReconhecerFormas : MonoBehaviour
                     min -= Vector2.one * vAabbPadding;
                     max += Vector2.one * vAabbPadding;
 
-                    DestruirPorTipo(circle:false, filtroLocal:(p2 => p2.x >= min.x && p2.y >= min.y && p2.x <= max.x && p2.y <= max.y), raioLocal:0f);
+                    DestruirPorTipo(circle:false, filtroLocal:(p2 => p2.x >= min.x && p2.y >= min.y && p2.x <= max.x && p2.y <= max.y));
                 }
                 return;
         }
     }
 
-    /// <summary>
-    /// Procura e destrói alvos de um tipo (círculo ou V), opcionalmente filtrando por uma região 2D no espaço do gesto.
-    /// </summary>
-    private void DestruirPorTipo(bool circle, System.Predicate<Vector2> filtroLocal, float raioLocal)
+    private void InstanciarPrefab(Vector3 pos)
+    {
+        if (!prefabOnRecognized) return;
+
+        Quaternion rot = Quaternion.identity;
+        if (alignPrefabToCamera && cameraGesto != null)
+            rot = Quaternion.LookRotation(cameraGesto.transform.forward, Vector3.up);
+
+        Instantiate(prefabOnRecognized, pos, rot);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────────
+    // DESTRUIÇÃO DE ALVOS
+    // ─────────────────────────────────────────────────────────────────────────────
+    private void DestruirPorTipo(bool circle, System.Predicate<Vector2> filtroLocal)
     {
         int count = 0;
 
@@ -225,10 +288,11 @@ public class MecanicaReconhecerFormas : MonoBehaviour
                 var alvos = FindObjectsOfType<DestroyOnCircle>(false);
                 for (int i = 0; i < alvos.Length; i++)
                 {
-                    if (alvos[i] == null) continue;
-                    if (filtroLocal == null || PontoAlvoPassaFiltro(alvos[i].transform.position, filtroLocal))
+                    var a = alvos[i];
+                    if (!a) continue;
+                    if (FiltroPassa(a.transform.position, filtroLocal))
                     {
-                        Destroy(alvos[i].gameObject);
+                        Destroy(a.gameObject);
                         count++;
                     }
                 }
@@ -238,10 +302,11 @@ public class MecanicaReconhecerFormas : MonoBehaviour
                 var alvos = FindObjectsOfType<DestroyOnV>(false);
                 for (int i = 0; i < alvos.Length; i++)
                 {
-                    if (alvos[i] == null) continue;
-                    if (filtroLocal == null || PontoAlvoPassaFiltro(alvos[i].transform.position, filtroLocal))
+                    var a = alvos[i];
+                    if (!a) continue;
+                    if (FiltroPassa(a.transform.position, filtroLocal))
                     {
-                        Destroy(alvos[i].gameObject);
+                        Destroy(a.gameObject);
                         count++;
                     }
                 }
@@ -257,8 +322,8 @@ public class MecanicaReconhecerFormas : MonoBehaviour
             for (int i = 0; i < gos.Length; i++)
             {
                 var go = gos[i];
-                if (go == null) continue;
-                if (filtroLocal == null || PontoAlvoPassaFiltro(go.transform.position, filtroLocal))
+                if (!go) continue;
+                if (FiltroPassa(go.transform.position, filtroLocal))
                 {
                     Destroy(go);
                     count++;
@@ -274,62 +339,54 @@ public class MecanicaReconhecerFormas : MonoBehaviour
     }
 
     /// <summary>
-    /// Converte a posição de um alvo no mundo para o mesmo espaço 2D usado pelos pts2D do gesto
+    /// Converte posição de um alvo no mundo para o mesmo espaço 2D usado pelos pts2D do gesto
     /// e aplica o filtroLocal.
     /// </summary>
-    private bool PontoAlvoPassaFiltro(Vector3 worldPos, System.Predicate<Vector2> filtroLocal)
+    private bool FiltroPassa(Vector3 worldPos, System.Predicate<Vector2> filtroLocal)
     {
         if (filtroLocal == null) return true;
-
-        // Projetar para o espaço 2D do gesto
-        Vector2 p2;
-        if (!TryProjectWorldToGesture2D(worldPos, out p2))
-            return false;
-
+        if (!TryProjectWorldToGesture2D(worldPos, out Vector2 p2)) return false;
         return filtroLocal(p2);
     }
 
     /// <summary>
     /// Projeta worldPos para o mesmo espaço 2D usado nos pts2D do gesto.
-    /// Para OverlayCamera, assumimos que os pts2D estão no espaço LOCAL da overlayCam (setup recomendado).
-    /// Para World: XY ou XZ.
+    /// Configurado via (gestoEmOverlay, overlayUsaEspacoLocal, cameraGesto, gestoPlanoXY).
     /// </summary>
     private bool TryProjectWorldToGesture2D(Vector3 worldPos, out Vector2 p2)
-{
-    p2 = Vector2.zero;
-    if (desenho == null) return false;
-
-    var cam = desenho.EffectiveCamera;
-
-    if (desenho.Mode == MecanicaDesenhoNaTela.DrawSpace.World)
     {
-        if (desenho.Plane == MecanicaDesenhoNaTela.ProjectionPlane.XY)
-            p2 = new Vector2(worldPos.x, worldPos.y);
-        else
-            p2 = new Vector2(worldPos.x, worldPos.z);
-        return true;
-    }
-    else // OverlayCamera
-    {
-        if (cam == null) return false;
+        p2 = Vector2.zero;
 
-        // Se o desenho grava pontos em LOCAL SPACE da overlayCam, projetamos pro local.
-        // Se grava em WORLD (overlayUseLocalSpace = false), comparamos em WORLD (x,y).
-        if (desenho.OverlayUseLocalSpace)
+        if (gestoEmOverlay)
         {
-            Vector3 local = cam.transform.InverseTransformPoint(worldPos);
-            p2 = new Vector2(local.x, local.y);
+            if (cameraGesto == null) return false;
+
+            if (overlayUsaEspacoLocal)
+            {
+                // Espaço LOCAL da cameraGesto → usar InverseTransformPoint
+                Vector3 local = cameraGesto.transform.InverseTransformPoint(worldPos);
+                p2 = new Vector2(local.x, local.y);
+            }
+            else
+            {
+                // Espaço WORLD sobreposto na tela → usar x/y do mundo
+                p2 = new Vector2(worldPos.x, worldPos.y);
+            }
+            return true;
         }
         else
         {
-            p2 = new Vector2(worldPos.x, worldPos.y);
+            // Gesto no Mundo: projetar para XY ou XZ conforme configuração
+            p2 = gestoPlanoXY
+                ? new Vector2(worldPos.x, worldPos.y)
+                : new Vector2(worldPos.x, worldPos.z);
+            return true;
         }
-        return true;
     }
-}
 
-
-    // ================== RECOGNIZERS ==================
+    // ─────────────────────────────────────────────────────────────────────────────
+    // RECOGNIZERS
+    // ─────────────────────────────────────────────────────────────────────────────
     private bool TryRecognizeCircle(IReadOnlyList<Vector2> pts2D, out Vector3 center3, out float radius, IReadOnlyList<Vector3> pts3D)
     {
         center3 = default; radius = 0f;
@@ -355,6 +412,7 @@ public class MecanicaReconhecerFormas : MonoBehaviour
         bool isCircle = closedEnough && (rsd <= toleranciaRedondezRsd);
         if (!isCircle) return false;
 
+        // Centro 3D como centróide dos pontos 3D do traço (adequado para instanciar/destruir no mundo).
         center3 = Centroid3D(pts3D);
         radius = meanR;
         return true;
@@ -417,13 +475,16 @@ public class MecanicaReconhecerFormas : MonoBehaviour
         return true;
     }
 
-    // ================== Utils geométricas ==================
+    // ─────────────────────────────────────────────────────────────────────────────
+    // UTILITÁRIAS GEOMÉTRICAS
+    // ─────────────────────────────────────────────────────────────────────────────
     private static float PathLength2D(IReadOnlyList<Vector2> pts)
     {
         float d = 0f;
         for (int i = 1; i < pts.Count; i++) d += Vector2.Distance(pts[i - 1], pts[i]);
         return d;
     }
+
     private static float PathLength2D(IReadOnlyList<Vector2> pts, int i0, int i1)
     {
         if (i1 <= i0) return 0f;
@@ -431,12 +492,14 @@ public class MecanicaReconhecerFormas : MonoBehaviour
         for (int i = i0 + 1; i <= i1; i++) d += Vector2.Distance(pts[i - 1], pts[i]);
         return d;
     }
+
     private static Vector2 Centroid2D(IReadOnlyList<Vector2> pts)
     {
         Vector2 s = Vector2.zero;
         for (int i = 0; i < pts.Count; i++) s += pts[i];
         return s / Mathf.Max(1, pts.Count);
     }
+
     private static Vector3 Centroid3D(IReadOnlyList<Vector3> pts)
     {
         Vector3 s = Vector3.zero;

@@ -199,6 +199,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   desenho: {fileID: 85455033}
+  gestoEmOverlay: 1
+  overlayUsaEspacoLocal: 1
+  cameraGesto: {fileID: 407088380}
+  gestoPlanoXY: 1
   compMinTracoPx: 90
   toleranciaFechamentoR: 0.4
   toleranciaRedondezRsd: 0.6
@@ -215,11 +219,11 @@ MonoBehaviour:
   prefabOnRecognized: {fileID: 0}
   alignPrefabToCamera: 1
   selectionScopeCircle: 0
-  selectionScopeV: 0
   circleByComponent: 1
   circleByTag: 0
   circleTag: DestruivelO
   circleSelectionRadiusMul: 1.6
+  selectionScopeV: 0
   vByComponent: 1
   vByTag: 0
   vTag: DestruivelV
@@ -248,18 +252,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9321f998234bbe44c8336fc59d4ad390, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  drawSpace: 1
-  projectionPlane: 0
-  drawCamera: {fileID: 815031003}
-  overlayCam: {fileID: 407088380}
-  overlayStickToCamera: 1
-  overlayUseLocalSpace: 1
-  gesturesLayerName: Gestures
-  lineWidthPixels: 12
-  lineColor:
+  modoDesenho: 1
+  plano: 0
+  cameraMundo: {fileID: 815031003}
+  cameraOverlay: {fileID: 407088380}
+  prenderNaCameraOverlay: 1
+  usarEspacoLocalOverlay: 1
+  larguraPixels: 8
+  corLinha:
     serializedVersion: 2
-    key0: {r: 1, g: 0.93575424, b: 0.4764151, a: 1}
-    key1: {r: 1, g: 0.93575424, b: 0.4764151, a: 1}
+    key0: {r: 1, g: 1, b: 1, a: 1}
+    key1: {r: 1, g: 1, b: 1, a: 1}
     key2: {r: 0, g: 0, b: 0, a: 0}
     key3: {r: 0, g: 0, b: 0, a: 0}
     key4: {r: 0, g: 0, b: 0, a: 0}
@@ -286,22 +289,19 @@ MonoBehaviour:
     m_ColorSpace: -1
     m_NumColorKeys: 2
     m_NumAlphaKeys: 2
-  lineMaterial: {fileID: 2100000, guid: 6d682b50bd0ba2e489153e4eb1defda5, type: 2}
-  perspectiveDistance: 1
-  useFixedWorldZ: 0
-  fixedWorldZ: 0
-  useFixedWorldY: 0
-  fixedWorldY: 0
-  enableInput: 1
-  ignoreWhenPointerOverUI: 1
-  minPointDistance: 0.015
-  maxPointsPerStroke: 4096
-  sortingLayerName: Default
-  sortingOrder: 9999
-  autoFade: 1
-  fadeDelay: 0.6
-  fadeDuration: 0.5
-  fadeShrinkWidth: 1
+  materialLinha: {fileID: 2100000, guid: e6bd41b43fb4de24e9efbb31f38e9e8d, type: 2}
+  distanciaPerspectiva: 1
+  usarZfixo: 1
+  zFixo: 0
+  usarYfixo: 0
+  yFixo: 0
+  permitirInputAntigo: 0
+  distanciaMinimaPonto: 0.015
+  maxPontosPorTraco: 4096
+  fadeAutomatico: 1
+  atrasoFade: 0.6
+  duracaoFade: 0.5
+  fadeAfina: 1
 --- !u!1 &138826698
 GameObject:
   m_ObjectHideFlags: 0
@@ -479,8 +479,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 62899f850307741f2a39c98a8b639597, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_Actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b,
-    type: 3}
+  m_Actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   m_NotificationBehavior: 0
   m_UIInputModule: {fileID: 0}
   m_DeviceLostEvent:
@@ -495,7 +494,7 @@ MonoBehaviour:
   m_ActionEvents: []
   m_NeverAutoSwitchControlSchemes: 0
   m_DefaultControlScheme: 
-  m_DefaultActionMap: Player
+  m_DefaultActionMap: DrawMecanic
   m_SplitScreenIndex: -1
   m_Camera: {fileID: 0}
 --- !u!95 &225897893
@@ -544,7 +543,7 @@ Rigidbody:
   m_UseGravity: 1
   m_IsKinematic: 1
   m_Interpolate: 0
-  m_Constraints: 0
+  m_Constraints: 126
   m_CollisionDetection: 0
 --- !u!136 &225897898
 CapsuleCollider:
@@ -1014,7 +1013,6 @@ GameObject:
   m_Component:
   - component: {fileID: 407088381}
   - component: {fileID: 407088380}
-  - component: {fileID: 407088379}
   - component: {fileID: 407088378}
   m_Layer: 0
   m_Name: GestureCam
@@ -1067,14 +1065,6 @@ MonoBehaviour:
     m_MipBias: 0
     m_VarianceClampScale: 0.9
     m_ContrastAdaptiveSharpening: 0
---- !u!81 &407088379
-AudioListener:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 407088377}
-  m_Enabled: 1
 --- !u!20 &407088380
 Camera:
   m_ObjectHideFlags: 0
@@ -2032,28 +2022,17 @@ MonoBehaviour:
   m_MoveRepeatDelay: 0.5
   m_MoveRepeatRate: 0.1
   m_XRTrackingOrigin: {fileID: 0}
-  m_ActionsAsset: {fileID: -944628639613478452, guid: ca9f5fa95ffab41fb9a615ab714db018,
-    type: 3}
-  m_PointAction: {fileID: -1654692200621890270, guid: ca9f5fa95ffab41fb9a615ab714db018,
-    type: 3}
-  m_MoveAction: {fileID: -8784545083839296357, guid: ca9f5fa95ffab41fb9a615ab714db018,
-    type: 3}
-  m_SubmitAction: {fileID: 392368643174621059, guid: ca9f5fa95ffab41fb9a615ab714db018,
-    type: 3}
-  m_CancelAction: {fileID: 7727032971491509709, guid: ca9f5fa95ffab41fb9a615ab714db018,
-    type: 3}
-  m_LeftClickAction: {fileID: 3001919216989983466, guid: ca9f5fa95ffab41fb9a615ab714db018,
-    type: 3}
-  m_MiddleClickAction: {fileID: -2185481485913320682, guid: ca9f5fa95ffab41fb9a615ab714db018,
-    type: 3}
-  m_RightClickAction: {fileID: -4090225696740746782, guid: ca9f5fa95ffab41fb9a615ab714db018,
-    type: 3}
-  m_ScrollWheelAction: {fileID: 6240969308177333660, guid: ca9f5fa95ffab41fb9a615ab714db018,
-    type: 3}
-  m_TrackedDevicePositionAction: {fileID: 6564999863303420839, guid: ca9f5fa95ffab41fb9a615ab714db018,
-    type: 3}
-  m_TrackedDeviceOrientationAction: {fileID: 7970375526676320489, guid: ca9f5fa95ffab41fb9a615ab714db018,
-    type: 3}
+  m_ActionsAsset: {fileID: -944628639613478452, guid: ca9f5fa95ffab41fb9a615ab714db018, type: 3}
+  m_PointAction: {fileID: -1654692200621890270, guid: ca9f5fa95ffab41fb9a615ab714db018, type: 3}
+  m_MoveAction: {fileID: -8784545083839296357, guid: ca9f5fa95ffab41fb9a615ab714db018, type: 3}
+  m_SubmitAction: {fileID: 392368643174621059, guid: ca9f5fa95ffab41fb9a615ab714db018, type: 3}
+  m_CancelAction: {fileID: 7727032971491509709, guid: ca9f5fa95ffab41fb9a615ab714db018, type: 3}
+  m_LeftClickAction: {fileID: 3001919216989983466, guid: ca9f5fa95ffab41fb9a615ab714db018, type: 3}
+  m_MiddleClickAction: {fileID: -2185481485913320682, guid: ca9f5fa95ffab41fb9a615ab714db018, type: 3}
+  m_RightClickAction: {fileID: -4090225696740746782, guid: ca9f5fa95ffab41fb9a615ab714db018, type: 3}
+  m_ScrollWheelAction: {fileID: 6240969308177333660, guid: ca9f5fa95ffab41fb9a615ab714db018, type: 3}
+  m_TrackedDevicePositionAction: {fileID: 6564999863303420839, guid: ca9f5fa95ffab41fb9a615ab714db018, type: 3}
+  m_TrackedDeviceOrientationAction: {fileID: 7970375526676320489, guid: ca9f5fa95ffab41fb9a615ab714db018, type: 3}
   m_DeselectOnBackgroundClick: 1
   m_PointerBehavior: 0
   m_CursorLockBehavior: 0
@@ -2213,6 +2192,63 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!1001 &1693946703
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 4975054937098623272, guid: d69761136a6b9b54eb6c8b74ebf6f4fc, type: 3}
+      propertyPath: m_Name
+      value: EmojiPrefab 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8744425679735938091, guid: d69761136a6b9b54eb6c8b74ebf6f4fc, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -3.4095085
+      objectReference: {fileID: 0}
+    - target: {fileID: 8744425679735938091, guid: d69761136a6b9b54eb6c8b74ebf6f4fc, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 8744425679735938091, guid: d69761136a6b9b54eb6c8b74ebf6f4fc, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -3.5496407
+      objectReference: {fileID: 0}
+    - target: {fileID: 8744425679735938091, guid: d69761136a6b9b54eb6c8b74ebf6f4fc, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8744425679735938091, guid: d69761136a6b9b54eb6c8b74ebf6f4fc, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8744425679735938091, guid: d69761136a6b9b54eb6c8b74ebf6f4fc, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8744425679735938091, guid: d69761136a6b9b54eb6c8b74ebf6f4fc, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8744425679735938091, guid: d69761136a6b9b54eb6c8b74ebf6f4fc, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8744425679735938091, guid: d69761136a6b9b54eb6c8b74ebf6f4fc, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8744425679735938091, guid: d69761136a6b9b54eb6c8b74ebf6f4fc, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: d69761136a6b9b54eb6c8b74ebf6f4fc, type: 3}
 --- !u!1 &1693955643
 GameObject:
   m_ObjectHideFlags: 0
@@ -2580,8 +2616,7 @@ MonoBehaviour:
   - {fileID: 1683598208}
   - {fileID: 57965765}
   - {fileID: 986270113}
-  prefabProjetil: {fileID: 4975054937098623272, guid: 00be510a6bc6c1248a53eb50b227b64a,
-    type: 3}
+  prefabProjetil: {fileID: 4975054937098623272, guid: 00be510a6bc6c1248a53eb50b227b64a, type: 3}
   regras:
   - stateName: CameraJogo7
     spawnerIndex: 0
@@ -3015,6 +3050,7 @@ GameObject:
   - component: {fileID: 225897898}
   - component: {fileID: 225897897}
   - component: {fileID: 919132148119780814}
+  - component: {fileID: 919132148119780815}
   m_Layer: 0
   m_Name: EcoDigital
   m_TagString: Untagged
@@ -3040,6 +3076,22 @@ MonoBehaviour:
   tagProjetil: 
   destruirProjetilAoAtingir: 0
   hitCooldown: 0.15
+--- !u!114 &919132148119780815
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 919132148119780813}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9afb0d52f641da1419961250178054f0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  desenho: {fileID: 0}
+  nomeActionMap: DrawMechanic
+  nomeActionContato: PointerContact
+  nomeActionPosicao: PointerPosition
 --- !u!4 &1017971966954878912
 Transform:
   m_ObjectHideFlags: 0
@@ -5002,3 +5054,4 @@ SceneRoots:
   - {fileID: 269389952}
   - {fileID: 460189978}
   - {fileID: 85455031}
+  - {fileID: 1693946703}

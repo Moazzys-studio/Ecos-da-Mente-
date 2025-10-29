@@ -9,6 +9,9 @@ TagManager:
   - NPCConectado
   - NPCDesconectado
   - PontoInteresse
+  - morre
+  - inimigo
+  - coletavel
   layers:
   - Default
   - TransparentFX

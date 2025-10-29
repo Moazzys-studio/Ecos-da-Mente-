@@ -6,7 +6,7 @@ using UnityEngine.InputSystem.EnhancedTouch;
 [RequireComponent(typeof(Rigidbody))]
 public class eco_movimento : MonoBehaviour
 {
-    [Header("Velocidade vertical")]
+        [Header("Velocidade vertical")]
     public float velocidadeVertical = 10f;
     public float maxVelocidadeVertical = 15f;
 
@@ -35,7 +35,8 @@ public class eco_movimento : MonoBehaviour
     private bool _estaNoChao;
 
     private InputAction _acaoAlternarFallback;
-    
+    private Vector3 posicaoInicial; // <-- Guarda a posição inicial do player
+
     void Awake()
     {
         _rb = GetComponent<Rigidbody>();
@@ -54,6 +55,12 @@ public class eco_movimento : MonoBehaviour
             _acaoAlternarFallback.AddBinding("<Pointer>/press");
             _acaoAlternarFallback.AddBinding("<Keyboard>/space");
         }
+    }
+
+    void Start()
+    {
+        // Guarda a posição inicial do jogador
+        posicaoInicial = transform.position;
     }
 
     void OnEnable()
@@ -131,7 +138,6 @@ public class eco_movimento : MonoBehaviour
     {
         bool noChaoAgora = EstaEncostadoAbaixo();
 
-        // Se tocar o chão, desativa animação de queda
         if (!_estaNoChao && noChaoAgora)
         {
             if (_anim != null)
@@ -140,19 +146,16 @@ public class eco_movimento : MonoBehaviour
 
         _estaNoChao = noChaoAgora;
 
-        // Se está no chão e não está subindo → mantém parado
         if (noChaoAgora && !_subindo)
         {
             var v = _rb.velocity; v.y = 0f; _rb.velocity = v;
         }
-        // Se está no teto enquanto sobe → para de subir
         else if (_subindo && EstaEncostadoAcima())
         {
             var v = _rb.velocity; v.y = 0f; _rb.velocity = v;
         }
         else
         {
-            // Se não está subindo e NÃO tem chão → CAI
             if (!_subindo && !noChaoAgora)
             {
                 Vector3 v = _rb.velocity;
@@ -171,5 +174,45 @@ public class eco_movimento : MonoBehaviour
     private bool EstaEncostadoAcima()
     {
         return Physics.Raycast(transform.position, Vector3.up, distanciaChecagem, camadasSolo);
+    }
+
+    private void OnCollisionEnter(Collision collision)
+    {
+        if (collision.gameObject.CompareTag("morre"))
+    {
+        // Reseta posição e velocidade
+        transform.position = posicaoInicial;
+        _rb.velocity = Vector3.zero;
+        _subindo = false;
+
+        // Garante que o personagem volte com rotação padrão (em pé)
+        transform.rotation = Quaternion.Euler(0f, 90f, 0f);
+
+        if (_anim != null)
+            _anim.SetBool(animacaoCaindo, false);
+    }
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.gameObject.CompareTag("coletavel"))
+        {
+           Destroy(other.gameObject); 
+        }
+
+        if (other.gameObject.CompareTag("inimigo"))
+        {
+           Destroy(other.gameObject);
+           // Reseta posição e velocidade
+        transform.position = posicaoInicial;
+        _rb.velocity = Vector3.zero;
+        _subindo = false;
+
+        // Garante que o personagem volte com rotação padrão (em pé)
+        transform.rotation = Quaternion.Euler(0f, 90f, 0f);
+
+        if (_anim != null)
+            _anim.SetBool(animacaoCaindo, false); 
+        }
     }
 }

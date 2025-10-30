@@ -195,15 +195,21 @@ public class eco_movimento : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.gameObject.CompareTag("coletavel"))
-        {
-           Destroy(other.gameObject); 
-        }
+       if (other.gameObject.CompareTag("coletavel"))
+    {
+        // Avisa o controlador de inimigos
+        FindObjectOfType<controle_inimigos>().OnCollectiblePicked();
 
-        if (other.gameObject.CompareTag("inimigo"))
-        {
-           Destroy(other.gameObject);
-           // Reseta posição e velocidade
+        Destroy(other.gameObject); 
+    }
+
+    if (other.gameObject.CompareTag("inimigo"))
+    {
+        Eco_Streamer_Variaveis.vida_ecoStreamer--;
+        Eco_Streamer_Variaveis.ecoStreamer_inimigos--;
+        Destroy(other.gameObject);
+
+        // Reseta posição e velocidade
         transform.position = posicaoInicial;
         _rb.velocity = Vector3.zero;
         _subindo = false;
@@ -212,7 +218,7 @@ public class eco_movimento : MonoBehaviour
         transform.rotation = Quaternion.Euler(0f, 90f, 0f);
 
         if (_anim != null)
-            _anim.SetBool(animacaoCaindo, false); 
-        }
+            _anim.SetBool(animacaoCaindo, false);
+    }
     }
 }

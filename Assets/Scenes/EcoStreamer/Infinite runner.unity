@@ -130,6 +130,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: -9165797768001435688, guid: 719b3457450592e48b8aba7b1a119085, type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: 6e48c518e60f17e4bb2b80d0e852a92b, type: 2}
     - target: {fileID: -8679921383154817045, guid: 719b3457450592e48b8aba7b1a119085, type: 3}
       propertyPath: m_LocalScale.x
       value: 0.18825445
@@ -182,6 +186,14 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -7146521406498821007, guid: 719b3457450592e48b8aba7b1a119085, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: -1995150314605265975, guid: 719b3457450592e48b8aba7b1a119085, type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: 6e48c518e60f17e4bb2b80d0e852a92b, type: 2}
     - target: {fileID: 919132149155446097, guid: 719b3457450592e48b8aba7b1a119085, type: 3}
       propertyPath: m_Name
       value: inimigo_Standard Run
@@ -193,6 +205,10 @@ PrefabInstance:
     - target: {fileID: 919132149155446097, guid: 719b3457450592e48b8aba7b1a119085, type: 3}
       propertyPath: m_TagString
       value: inimigo
+      objectReference: {fileID: 0}
+    - target: {fileID: 1082271958561512970, guid: 719b3457450592e48b8aba7b1a119085, type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -924,6 +940,64 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 109156648}
   m_Mesh: {fileID: -7087473724099325196, guid: fc10b7d3287e3294fa3c215fdc7ca308, type: 3}
+--- !u!1 &109712585
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 109712587}
+  - component: {fileID: 109712586}
+  m_Layer: 0
+  m_Name: Controle do jogo
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &109712586
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 109712585}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ea65eb0e46b99c548a1bb5bd5bdf6bc3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  materiais:
+  - {fileID: 2100000, guid: 6e48c518e60f17e4bb2b80d0e852a92b, type: 2}
+  - {fileID: 2100000, guid: 0f1cb8685f6c65d489f41732bea54b89, type: 2}
+  - {fileID: 2100000, guid: ffb50e62d1846ae4eaeb75a48bc2d395, type: 2}
+  - {fileID: 2100000, guid: ffb50e62d1846ae4eaeb75a48bc2d395, type: 2}
+  - {fileID: 2100000, guid: ffb50e62d1846ae4eaeb75a48bc2d395, type: 2}
+  - {fileID: 2100000, guid: ffb50e62d1846ae4eaeb75a48bc2d395, type: 2}
+  - {fileID: 2100000, guid: ffb50e62d1846ae4eaeb75a48bc2d395, type: 2}
+  - {fileID: 2100000, guid: ffb50e62d1846ae4eaeb75a48bc2d395, type: 2}
+  - {fileID: 2100000, guid: ffb50e62d1846ae4eaeb75a48bc2d395, type: 2}
+  - {fileID: 2100000, guid: ffb50e62d1846ae4eaeb75a48bc2d395, type: 2}
+  pontosParaMudarCor: 3
+  corInicial: {r: 0.53333336, g: 0.12156863, b: 0.11372549, a: 1}
+  corFinal: {r: 0.3537736, g: 0.62841964, b: 1, a: 1}
+--- !u!4 &109712587
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 109712585}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -2.1257572, y: -0.6117902, z: 6.0228844}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &122476694
 GameObject:
   m_ObjectHideFlags: 0
@@ -1815,7 +1889,7 @@ Rigidbody:
   m_IsKinematic: 0
   m_Interpolate: 0
   m_Constraints: 80
-  m_CollisionDetection: 1
+  m_CollisionDetection: 2
 --- !u!65 &323983785
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -3677,6 +3751,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: -9165797768001435688, guid: 719b3457450592e48b8aba7b1a119085, type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: 0f1cb8685f6c65d489f41732bea54b89, type: 2}
     - target: {fileID: -8679921383154817045, guid: 719b3457450592e48b8aba7b1a119085, type: 3}
       propertyPath: m_LocalScale.x
       value: 0.18825445
@@ -3729,6 +3807,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -1995150314605265975, guid: 719b3457450592e48b8aba7b1a119085, type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: 0f1cb8685f6c65d489f41732bea54b89, type: 2}
     - target: {fileID: 919132149155446097, guid: 719b3457450592e48b8aba7b1a119085, type: 3}
       propertyPath: m_Name
       value: inimigo_Standard Run (1)
@@ -3781,7 +3863,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: e7c78dcba4c44f9478cf74d61a4f9e23, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -1.95
+      value: 0.06
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: e7c78dcba4c44f9478cf74d61a4f9e23, type: 3}
       propertyPath: m_LocalPosition.z
@@ -10771,6 +10853,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: -9165797768001435688, guid: 719b3457450592e48b8aba7b1a119085, type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: ffb50e62d1846ae4eaeb75a48bc2d395, type: 2}
     - target: {fileID: -8679921383154817045, guid: 719b3457450592e48b8aba7b1a119085, type: 3}
       propertyPath: m_LocalScale.x
       value: 0.18825445
@@ -10823,6 +10909,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -1995150314605265975, guid: 719b3457450592e48b8aba7b1a119085, type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: ffb50e62d1846ae4eaeb75a48bc2d395, type: 2}
     - target: {fileID: 919132149155446097, guid: 719b3457450592e48b8aba7b1a119085, type: 3}
       propertyPath: m_Name
       value: inimigo_Standard Run (2)
@@ -12844,14 +12934,15 @@ SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
   - {fileID: 623469418}
+  - {fileID: 109712587}
+  - {fileID: 642627890}
+  - {fileID: 2142765793}
   - {fileID: 1460837559}
   - {fileID: 778583225}
   - {fileID: 105037507}
   - {fileID: 233087826}
   - {fileID: 1527947642}
   - {fileID: 2107599471}
-  - {fileID: 642627890}
-  - {fileID: 2142765793}
   - {fileID: 654334720}
   - {fileID: 4148257}
   - {fileID: 649414982}

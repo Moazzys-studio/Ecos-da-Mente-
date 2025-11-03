@@ -10,12 +10,29 @@ public class EcoDigitalGameManager : MonoBehaviour
     [SerializeField] private bool mostrarNoStart = false;
 
     [Header("Câmera / Animator")]
-    [Tooltip("Animator que receberá o trigger (ex.: Animator da Virtual Camera).")]
+    [Tooltip("Animator que controla as animações de câmera (ex.: Animator da Virtual Camera).")]
     [SerializeField] private Animator animatorCamera;
 
-    [Tooltip("Nome do parâmetro Trigger no Animator (ex.: 'CameraJogo6').")]
-    [SerializeField] private string nomeTriggerCamera = "CameraJogo6";
+    [Tooltip("Nome do parâmetro Trigger no Animator (ex.: 'CameraJogo7'). Usado se o modo for Trigger.")]
+    [SerializeField] private string nomeTriggerCamera = "CameraJogo7";
 
+    // ===== Entrada Inicial da Câmera =====
+    public enum ModoEntradaCamera { Trigger, PlayState, CrossFadeState }
+
+    [Header("Entrada Inicial da Câmera")]
+    [Tooltip("Se marcado, ao iniciar o jogo (Start) já pulamos para a câmera 'inicial'.")]
+    [SerializeField] private bool pularParaCameraInicialNoStart = true;
+
+    [Tooltip("Como pular para a câmera inicial: por Trigger, Play direto no State, ou CrossFade.")]
+    [SerializeField] private ModoEntradaCamera modoEntradaInicial = ModoEntradaCamera.Trigger;
+
+    [Tooltip("Nome do estado da câmera (ex.: 'CameraJogo7'). Usado se o modo for PlayState ou CrossFadeState.")]
+    [SerializeField] private string nomeEstadoCameraInicial = "CameraJogo7";
+
+    [Tooltip("Duração do CrossFade (s). Válido apenas no modo CrossFadeState.")]
+    [SerializeField, Min(0f)] private float crossFadeDuration = 0.15f;
+
+    // ===== Disparo / Alvos =====
     [Header("Disparo / Alvos")]
     [Tooltip("Transform do Eco (alvo).")]
     [SerializeField] private Transform eco;
@@ -28,9 +45,9 @@ public class EcoDigitalGameManager : MonoBehaviour
 
     public enum ModoSelecaoPrefab
     {
-        Primeiro,           // Usa o primeiro da lista da regra
-        AleatorioCadaTiro,  // Sorteia a cada tiro
-        RoundRobin          // Alterna ciclicamente entre os prefabs da lista
+        Primeiro,
+        AleatorioCadaTiro,
+        RoundRobin
     }
 
     [System.Serializable]
@@ -73,11 +90,6 @@ public class EcoDigitalGameManager : MonoBehaviour
     // round-robin: índice atual por regra
     private int[] _rrIndex;
 
-    [Header("Gestos / Desenho na tela")]
-    [SerializeField] private GameObject holderGestos;         // arraste o GO com MecanicaDesenhoNaTela + MecanicaReconhecerFormas
-    [SerializeField] private GameObject gestureCamGO;         // opcional: se sua câmera overlay é um GO separado
-    [SerializeField] private bool desativarHolderNoStart = true;
-
     private void Start()
     {
         if (painelInicio != null)
@@ -86,11 +98,11 @@ public class EcoDigitalGameManager : MonoBehaviour
         // inicializa round-robin por regra
         _rrIndex = (regras != null && regras.Length > 0) ? new int[regras.Length] : new int[0];
 
-        // manter holder de gestos desativado no início, se for o caso
-        if (desativarHolderNoStart && holderGestos != null)
-            holderGestos.SetActive(false);
-        if (desativarHolderNoStart && gestureCamGO != null)
-            gestureCamGO.SetActive(false);
+        // Pular para câmera inicial se configurado
+        if (pularParaCameraInicialNoStart)
+        {
+            PularParaCameraInicial();
+        }
     }
 
     private void Update()
@@ -128,31 +140,74 @@ public class EcoDigitalGameManager : MonoBehaviour
         if (painelInicio.activeSelf) painelInicio.SetActive(false);
     }
 
-    /// <summary>Chamado pelo botão "Jogar". Fecha o painel, aciona o trigger e liga gestos.</summary>
+    /// <summary>Chamado pelo botão "Jogar". Fecha o painel e posiciona câmera.</summary>
     public void IniciarJogo()
     {
-        // 1) Fecha painel
         EsconderPainelInicio();
+        PularParaCameraInicial();
+    }
 
-        // 2) Liga gestos/overlay (independente da câmera acertar o trigger)
-        if (holderGestos != null && !holderGestos.activeSelf)
-            holderGestos.SetActive(true);
-        if (gestureCamGO != null && !gestureCamGO.activeSelf)
-            gestureCamGO.SetActive(true);
+    // ===== APIs para pular para câmera =====
 
-        // 3) Dispara trigger da câmera (se disponível)
+    /// <summary>Pula para a câmera inicial segundo o modo configurado.</summary>
+    public void PularParaCameraInicial()
+    {
         if (animatorCamera == null)
             animatorCamera = GetComponent<Animator>() ?? FindFirstObjectByType<Animator>();
 
-        if (animatorCamera != null && HasTrigger(animatorCamera, nomeTriggerCamera))
+        if (animatorCamera == null)
         {
-            animatorCamera.ResetTrigger(nomeTriggerCamera);
-            animatorCamera.SetTrigger(nomeTriggerCamera);
+            Debug.LogWarning("[EcoDigitalGameManager] Animator da câmera não encontrado.");
+            return;
+        }
+
+        switch (modoEntradaInicial)
+        {
+            case ModoEntradaCamera.Trigger:
+                PularParaCameraPorTrigger(nomeTriggerCamera);
+                break;
+
+            case ModoEntradaCamera.PlayState:
+                PularParaCameraPorEstado(nomeEstadoCameraInicial, usarCrossFade:false, 0f);
+                break;
+
+            case ModoEntradaCamera.CrossFadeState:
+                PularParaCameraPorEstado(nomeEstadoCameraInicial, usarCrossFade:true, crossFadeDuration);
+                break;
+        }
+    }
+
+    /// <summary>Aciona um Trigger no Animator para trocar a câmera.</summary>
+    public void PularParaCameraPorTrigger(string triggerName)
+    {
+        if (animatorCamera == null) return;
+
+        if (HasTrigger(animatorCamera, triggerName))
+        {
+            animatorCamera.ResetTrigger(triggerName);
+            animatorCamera.SetTrigger(triggerName);
         }
         else
         {
-            Debug.LogWarning($"[EcoDigitalGameManager] Animator/Trigger '{nomeTriggerCamera}' indisponível. Gestos foram ativados.");
+            Debug.LogWarning($"[EcoDigitalGameManager] Trigger '{triggerName}' não existe no Animator.");
         }
+    }
+
+    /// <summary>Força a transição para um estado de câmera (Play direto ou CrossFade).</summary>
+    public void PularParaCameraPorEstado(string stateName, bool usarCrossFade, float duration)
+    {
+        if (animatorCamera == null) return;
+        if (string.IsNullOrWhiteSpace(stateName))
+        {
+            Debug.LogWarning("[EcoDigitalGameManager] Nome de estado vazio ao tentar pular de câmera.");
+            return;
+        }
+
+        int layer = 0;
+        if (usarCrossFade)
+            animatorCamera.CrossFade(stateName, Mathf.Max(0f, duration), layer, 0f);
+        else
+            animatorCamera.Play(stateName, layer, 0f);
     }
 
     // ======== Regras / Disparo ========
@@ -296,11 +351,5 @@ public class EcoDigitalGameManager : MonoBehaviour
         foreach (var p in anim.parameters)
             sb.AppendLine($"- {p.name} ({p.type})");
         return sb.ToString();
-    }
-
-    public void EncerrarGestos()
-    {
-        if (holderGestos) holderGestos.SetActive(false);
-        if (gestureCamGO) gestureCamGO.SetActive(false);
     }
 }

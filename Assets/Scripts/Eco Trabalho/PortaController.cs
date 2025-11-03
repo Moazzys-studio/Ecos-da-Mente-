@@ -8,17 +8,20 @@ public class PortaController : MonoBehaviour
 
     [Header("Sala / Ocultação")]
     [SerializeField] private TipoSala tipoDaSala = TipoSala.Nenhuma;
-    [SerializeField] private GameObject raizDesrenderizar;
-    [SerializeField] private string layerOculta = "SalaOculta";
-    [SerializeField] private float delayVisibilidade = 0.20f;
+    [SerializeField, Tooltip("Pai que contém as paredes/itens da sala que devem sumir.")]
+    private GameObject raizDesrenderizar;
+    [SerializeField, Tooltip("Layer criada para ocultar (todas as câmeras com essa layer desmarcada).")]
+    private string layerOculta = "SalaOculta";
+    [SerializeField, Tooltip("Atraso só para ESCONDER (evita piscar na passagem).")]
+    private float delayInvisibilidade = 0.08f;
 
     [Header("Porta (visual)")]
     [SerializeField] private Transform portaVisual;
 
     [Header("Ângulos (local Euler)")]
-    [SerializeField] private Vector3 rotacaoFechada      = new Vector3(-90f, -90f,   0f);
-    [SerializeField] private Vector3 rotacaoAbertaFora   = new Vector3(-90f,  15f,   0f);
-    [SerializeField] private Vector3 rotacaoAbertaDentro = new Vector3(-90f, -178f,  0f);
+    [SerializeField] private Vector3 rotacaoFechada      = new Vector3(-90f, -90f, 0f);
+    [SerializeField] private Vector3 rotacaoAbertaFora   = new Vector3(-90f,  15f, 0f);
+    [SerializeField] private Vector3 rotacaoAbertaDentro = new Vector3(-90f, -178f,0f);
 
     [Header("Comportamento")]
     [SerializeField, Tooltip("Mais alto = mais responsivo.")] private float velocidadeRotacao = 8f;
@@ -33,24 +36,34 @@ public class PortaController : MonoBehaviour
     [SerializeField] private bool padronizarAudioSource = true;
 
     [Header("Anti-atravessar parede (opcional)")]
+    [SerializeField] private bool antiOverlapEnabled = true;
     [SerializeField, Tooltip("BoxCollider da FOLHA da porta (AABB).")]
     private BoxCollider portaColisorAABB;
     [SerializeField, Tooltip("Layers consideradas parede/batente.")]
     private LayerMask paredeMask;
+    [SerializeField, Tooltip("Folga do Overlap (m) para evitar falso positivo.")]
+    private float overlapSkin = 0.005f;
+
+    [Header("Antispam / Anti-spin")]
+    [SerializeField, Tooltip("Sempre fechar totalmente antes de trocar a direção de abertura.")]
+    private bool fecharAntesDeTrocar = true;
+    [SerializeField, Tooltip("Tempo mínimo (s) com o vão vazio antes de destravar a direção.")]
+    private float destravaDirecaoDelay = 0.25f;
 
     // ----- Estado -----
     private Quaternion qFechada, qAbertaFora, qAbertaDentro, alvoRotacao;
     private bool estaAberta=false, estaMovendo=false, bloqueado=false;
     private float tempoFechar=-1f;
 
-    private int contagemOcupantes=0;
-    private bool playerDentroDaSala=false;
-    private Coroutine coVis;
-    private int visToken=0;
+    private int contagemOcupantes=0;           // só para controle da porta
+    private bool playerDentroDaSala=false;     // estado lógico atual de “dentro”
+    private Coroutine coVis;                   // coroutine de (des)visibilidade
+    private int visToken=0;                    // coalescer últimas intenções
 
     // Direção travada enquanto houver alguém no vão
     private bool direcaoTravadaValida=false;
     private bool ladoTravadoFora=true; // true=abre para FORA; false=para DENTRO
+    private Coroutine coDestravaDirecao;
 
     // Ocultação cache
     private readonly List<Transform> _layerTargets = new();
@@ -59,7 +72,9 @@ public class PortaController : MonoBehaviour
     private readonly List<SpriteRenderer> _spriteRenderers = new();
 
     // Áudio
-    private float _ultimoSomAbrir=-999f, _ultimoSomFechar=-999f;
+    private float _ultimoSomAbrir = -999f, _ultimoSomFechar = -999f;
+    [SerializeField] private SalaFader salaFader; // arraste no inspetor (mesmo raizDesrenderizar)
+
 
     private void Start()
     {
@@ -76,11 +91,13 @@ public class PortaController : MonoBehaviour
 
         if (padronizarAudioSource && audioSource != null)
         {
-            audioSource.spatialBlend = 0f; audioSource.dopplerLevel = 0f; audioSource.priority = 10;
+            audioSource.spatialBlend = 0f;
+            audioSource.dopplerLevel = 0f;
+            audioSource.priority     = 10;
         }
 
         BuildCaches();
-        AplicarVisibilidade(true);
+        AplicarVisibilidade(true); // começa visível
         Debug.Log($"[PortaController:{name}] START -> VISÍVEL");
     }
 
@@ -88,22 +105,12 @@ public class PortaController : MonoBehaviour
     {
         if (estaMovendo && portaVisual != null)
         {
-            // Próxima rotação candidata
             Quaternion next = Quaternion.Lerp(portaVisual.localRotation, alvoRotacao, Time.deltaTime * velocidadeRotacao);
 
-            // Checagem simples de sobreposição da folha com parede
-            if (portaColisorAABB && paredeMask.value != 0)
+            if (antiOverlapEnabled && portaColisorAABB && paredeMask.value != 0 && CausariaSobreposicao(next))
             {
-                if (CausariaSobreposicao(next))
-                {
-                    // trava aqui (não avança nesse frame)
-                    estaMovendo = false;
-                    bloqueado   = false;
-                }
-                else
-                {
-                    portaVisual.localRotation = next;
-                }
+                estaMovendo = false;
+                bloqueado   = false;
             }
             else
             {
@@ -124,56 +131,90 @@ public class PortaController : MonoBehaviour
         }
     }
 
-    // ===== API =====
+    // ===== API (chamado pelo Trigger) =====
 
-    /// <summary>Chamado pelo trigger no ENTER, informando o lado de FORA do player.</summary>
+    /// <summary>ENTER: trava direção (se necessário) e abre. Não persegue o player.</summary>
     public void NotifyEnter(bool isOutside)
     {
         contagemOcupantes++;
         tempoFechar = -1f;
+        if (coDestravaDirecao != null) { StopCoroutine(coDestravaDirecao); coDestravaDirecao = null; }
 
         if (!direcaoTravadaValida)
         {
+            if (fecharAntesDeTrocar && estaAberta && !AproximadoDoAlvo(qFechada))
+                StartCoroutine(CoFecharEAbrir(isOutside));
+            else
+            {
+                ladoTravadoFora = isOutside;
+                alvoRotacao = ladoTravadoFora ? qAbertaFora : qAbertaDentro;
+                TryAbrir(alvoRotacao);
+            }
             direcaoTravadaValida = true;
-            ladoTravadoFora = isOutside;
-            // define alvo e abre
-            alvoRotacao = ladoTravadoFora ? qAbertaFora : qAbertaDentro;
-            TryAbrir(alvoRotacao);
         }
         else
         {
-            // já tem direção travada: apenas garante aberta
             if (!estaAberta) TryAbrir(ladoTravadoFora ? qAbertaFora : qAbertaDentro);
         }
     }
 
-    /// <summary>Chamado pelo trigger no EXIT.</summary>
+    /// <summary>EXIT: agenda fechamento e (apenas) destrava direção depois de um tempo vazio.</summary>
     public void NotifyExit()
     {
         contagemOcupantes = Mathf.Max(0, contagemOcupantes - 1);
         if (contagemOcupantes == 0)
         {
-            // destrava direção quando esvaziar
-            direcaoTravadaValida = false;
             AgendarFechar();
+            if (coDestravaDirecao != null) StopCoroutine(coDestravaDirecao);
+            coDestravaDirecao = StartCoroutine(CoDestravarDirecaoDepois());
         }
     }
 
-    /// <summary>Define se o player está DENTRO da sala (true=dentro, false=fora) para ocultação de paredes.</summary>
+    /// <summary>Chamado pelo Trigger quando cruza plano: DENTRO=true (esconde), DENTRO=false (mostra).</summary>
     public void SetPlayerDentroDaSala(bool dentro)
     {
-        if (playerDentroDaSala == dentro) return;
+        if (playerDentroDaSala == dentro && coVis == null) return; // já está assim e não há ação pendente
+
         playerDentroDaSala = dentro;
+        bool visivel = !playerDentroDaSala;
 
-        bool visivel = !playerDentroDaSala; // dentro -> invisível
-        if (coVis != null) StopCoroutine(coVis);
-        coVis = StartCoroutine(CoVisibilidadeDelay(visivel, delayVisibilidade));
+        // Regras determinísticas:
+        // - Se vamos ESCONDER (visivel=false) -> aplica após pequeno atraso (delayInvisibilidade)
+        // - Se vamos MOSTRAR (visivel=true)   -> cancela qualquer hide pendente e mostra já
+        if (coVis != null) { StopCoroutine(coVis); coVis = null; }
 
-        // Debug opcional:
-        // Debug.Log($"[PortaController:{name}] Dentro={dentro} (vis={visivel} em {delayVisibilidade:0.00}s)");
+        if (!visivel)
+        {
+            coVis = StartCoroutine(CoVisEsconderDepois(delayInvisibilidade));
+        }
+        else
+        {
+            AplicarVisibilidade(true);
+        }
     }
 
     // ===== Internos porta =====
+
+    private IEnumerator CoDestravarDirecaoDepois()
+    {
+        yield return new WaitForSeconds(destravaDirecaoDelay);
+        if (contagemOcupantes == 0)
+            direcaoTravadaValida = false;
+        coDestravaDirecao = null;
+    }
+
+    private IEnumerator CoFecharEAbrir(bool novoIsOutside)
+    {
+        alvoRotacao = qFechada;
+        TryFechar();
+
+        float t0 = Time.time;
+        while (estaMovendo && Time.time - t0 < 1.0f) yield return null;
+
+        ladoTravadoFora = novoIsOutside;
+        alvoRotacao = ladoTravadoFora ? qAbertaFora : qAbertaDentro;
+        TryAbrir(alvoRotacao);
+    }
 
     private void AgendarFechar()
     {
@@ -222,20 +263,21 @@ public class PortaController : MonoBehaviour
         ultimaVez = Time.time;
     }
 
-    // ===== Anti-atravessar parede =====
-
+    // ===== Anti-Overlap (corrigido) =====
     private bool CausariaSobreposicao(Quaternion rotCandidate)
     {
-        // Calcula centro e tamanho do AABB do BoxCollider em world space sob a rotação candidata.
-        // Obs: é uma aproximação simples (usa localToWorldMatrix do colisor).
-        var t = portaColisorAABB.transform;
-        Vector3 worldCenter = t.TransformPoint(portaColisorAABB.center);
-        Vector3 half = portaColisorAABB.size * 0.5f;
-        Vector3 worldHalf = Vector3.Scale(half, t.lossyScale);
+        Transform t = portaColisorAABB.transform;
 
-        // Para “simular” a rotação candidata, aplicamos uma matriz temporária
-        // no cálculo do OverlapBox via Quaternion rotCandidate * (rot do pai relativo).
-        Quaternion worldRot = rotCandidate; // suficiente para maioria dos casos (pivot na folha)
+        Quaternion oldLocalRot = t.localRotation; // sample local
+        t.localRotation = rotCandidate;
+
+        Vector3 worldCenter = t.TransformPoint(portaColisorAABB.center);
+        Vector3 half        = portaColisorAABB.size * 0.5f - Vector3.one * Mathf.Max(0f, overlapSkin);
+        half = new Vector3(Mathf.Max(0f, half.x), Mathf.Max(0f, half.y), Mathf.Max(0f, half.z));
+        Vector3 worldHalf   = Vector3.Scale(half, t.lossyScale);
+        Quaternion worldRot = t.rotation;
+
+        t.localRotation = oldLocalRot; // revert sample
 
         Collider[] hits = Physics.OverlapBox(worldCenter, worldHalf, worldRot, paredeMask, QueryTriggerInteraction.Ignore);
         return hits != null && hits.Length > 0;
@@ -243,14 +285,14 @@ public class PortaController : MonoBehaviour
 
     // ===== Ocultação =====
 
-    private IEnumerator CoVisibilidadeDelay(bool visivel, float delay)
+    private IEnumerator CoVisEsconderDepois(float delay)
     {
         int token = ++visToken;
         if (delay > 0f) yield return new WaitForSeconds(delay);
         if (token != visToken) yield break;
 
-        AplicarVisibilidade(visivel);
-        // Debug.Log($"[PortaController:{name}] APLICADO -> {(visivel ? "VISÍVEL" : "INVISÍVEL")}");
+        AplicarVisibilidade(false); // esconder
+        coVis = null;
     }
 
     private void BuildCaches()
@@ -284,10 +326,18 @@ public class PortaController : MonoBehaviour
     }
 
     private void AplicarVisibilidade(bool visivel)
+{
+    if (salaFader != null)
     {
-        AplicarPorLayer(visivel);
-        AplicarPorRenderers(visivel);
+        if (visivel) salaFader.FadeIn();
+        else         salaFader.FadeOut();
+        return; // o SalaFader cuida de layer/renderers
     }
+
+    // (fallback antigo, caso não use efeitos)
+    AplicarPorLayer(visivel);
+    AplicarPorRenderers(visivel);
+}
 
     private void AplicarPorLayer(bool visivel)
     {
@@ -333,4 +383,17 @@ public class PortaController : MonoBehaviour
             sr.enabled = visivel;
         }
     }
+
+    private void OnDisable()
+    {
+        // Se desabilitar a porta no editor/jogo, garante que a sala não fica presa invisível
+        AplicarVisibilidade(true);
+    }
+
+#if UNITY_EDITOR
+    [ContextMenu("TESTE: Invisível (como DENTRO)")]
+    private void _TestOcultar() => AplicarVisibilidade(false);
+    [ContextMenu("TESTE: Visível (como FORA)")]
+    private void _TestMostrar() => AplicarVisibilidade(true);
+#endif
 }

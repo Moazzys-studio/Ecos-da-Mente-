@@ -1581,7 +1581,7 @@ Camera:
     height: 1
   near clip plane: 0.3
   far clip plane: 1000
-  field of view: 45.94733
+  field of view: 50
   orthographic: 0
   orthographic size: 5
   m_Depth: 0
@@ -2099,7 +2099,7 @@ MonoBehaviour:
   m_LookAt: {fileID: 6803489359391642257}
   m_Follow: {fileID: 6803489359391642257}
   m_Lens:
-    FieldOfView: 45.94733
+    FieldOfView: 50
     OrthographicSize: 5
     NearClipPlane: 0.3
     FarClipPlane: 1000
@@ -2521,13 +2521,17 @@ MonoBehaviour:
   eco: {fileID: 6803489359391642257}
   spawners:
   - {fileID: 138826699}
-  - {fileID: 1683598208}
   - {fileID: 57965765}
-  - {fileID: 986270113}
+  yawExtraPorSpawner:
+  - -45
+  - 45
+  - 135
+  - -135
+  spawnersDoTurno: 0000000001000000
   prefabProjetil: {fileID: 4975054937098623272, guid: 00be510a6bc6c1248a53eb50b227b64a, type: 3}
   regras:
   - stateName: CameraJogo7
-    spawnerIndex: 0
+    spawnerIndex: 1
     quantidadeTiros: 10
     intervaloEntreTiros: 8
     velocidadeProjetil: 2

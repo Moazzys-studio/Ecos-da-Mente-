@@ -28,7 +28,8 @@ public class EcoTiroProjetil : MonoBehaviour
             : transform.forward;
 
         _rb.velocity = dir * Mathf.Max(0.1f, velocidade);
-        transform.rotation = Quaternion.LookRotation(dir, Vector3.up);
+        transform.rotation = Quaternion.LookRotation(dir, Vector3.up) * Quaternion.Euler(0f, 180f, 0f);
+
 
         if (lifetime > 0f) Destroy(gameObject, lifetime);
     }

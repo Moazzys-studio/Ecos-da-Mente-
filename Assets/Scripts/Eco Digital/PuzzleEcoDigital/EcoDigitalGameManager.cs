@@ -40,6 +40,12 @@ public class EcoDigitalGameManager : MonoBehaviour
     [Tooltip("Spawners (4 no seu caso). Ordem livre, mas lembre qual é qual).")]
     [SerializeField] private Transform[] spawners = new Transform[4];
 
+    [Tooltip("Yaw extra por spawner (graus). Ex.: [-45, +45, 0, 0].")]
+    [SerializeField] private float[] yawExtraPorSpawner = new float[4];
+
+    [Tooltip("Se quiser alternância por turno, liste aqui os índices dos spawners que participarão do turno atual (ex.: 0 e 1). Se vazio, usa o spawnerIndex da regra.")]
+    [SerializeField] private int[] spawnersDoTurno = new int[] { 0, 1 };
+
     [Tooltip("Prefab do projétil (global/opcional). Será usado se a regra não tiver sua própria lista.")]
     [SerializeField] private GameObject prefabProjetil;
 
@@ -56,7 +62,7 @@ public class EcoDigitalGameManager : MonoBehaviour
         [Tooltip("Nome do estado no Animator (pode ser só o nome do State). Ex.: 'CameraJogo6'")]
         public string stateName;
 
-        [Tooltip("Índice do spawner que dispara (0 a N-1).")]
+        [Tooltip("Índice do spawner que dispara (0 a N-1). Só é usado se 'spawnersDoTurno' estiver vazio.")]
         public int spawnerIndex;
 
         [Tooltip("Quantidade de tiros ao entrar nesse estado.")]
@@ -87,8 +93,11 @@ public class EcoDigitalGameManager : MonoBehaviour
     // ===== controle interno =====
     private int _lastFullPathHash = 0;
 
-    // round-robin: índice atual por regra
+    // round-robin: índice atual por regra (para lista de prefabs)
     private int[] _rrIndex;
+
+    // alternância de spawner por turno
+    private int _cursorAlternanciaSpawner = 0;
 
     private void Start()
     {
@@ -230,20 +239,15 @@ public class EcoDigitalGameManager : MonoBehaviour
         {
             var regra = regras[idx];
 
-            // Valida spawner
-            if (spawners == null || spawners.Length == 0 || regra.spawnerIndex < 0 || regra.spawnerIndex >= spawners.Length)
-            {
-                Debug.LogWarning($"[EcoDigitalGameManager] SpawnerIndex inválido para estado '{regra.stateName}'.");
-                continue;
-            }
-            if (spawners[regra.spawnerIndex] == null)
-            {
-                Debug.LogWarning($"[EcoDigitalGameManager] Spawner {regra.spawnerIndex} não atribuído no Inspector.");
-                continue;
-            }
+            // Validação mínima do Eco e dos arrays
             if (eco == null)
             {
                 Debug.LogWarning("[EcoDigitalGameManager] Transform do Eco não atribuído.");
+                continue;
+            }
+            if (spawners == null || spawners.Length == 0)
+            {
+                Debug.LogWarning("[EcoDigitalGameManager] Nenhum spawner atribuído.");
                 continue;
             }
 
@@ -255,51 +259,87 @@ public class EcoDigitalGameManager : MonoBehaviour
                 continue;
             }
 
-            StartCoroutine(SequenciaDeTiros(idx, spawners[regra.spawnerIndex],
-                regra.quantidadeTiros, Mathf.Max(0f, regra.intervaloEntreTiros),
+            StartCoroutine(SequenciaDeTiros(idx,
+                Mathf.Max(1, regra.quantidadeTiros),
+                Mathf.Max(0f, regra.intervaloEntreTiros),
                 Mathf.Max(0.1f, regra.velocidadeProjetil)));
         }
     }
 
-    private IEnumerator SequenciaDeTiros(int regraIndex, Transform spawner, int quantidade, float intervalo, float velocidade)
+    private IEnumerator SequenciaDeTiros(int regraIndex, int quantidade, float intervalo, float velocidade)
     {
-        int qtd = Mathf.Max(1, quantidade);
-
-        for (int shot = 0; shot < qtd; shot++)
+        for (int shot = 0; shot < quantidade; shot++)
         {
+            // Escolhe spawner para ESTE tiro:
+            int idxSpawner = SelecionarSpawnerParaTiro(regraIndex);
+            if (idxSpawner < 0 || idxSpawner >= spawners.Length || spawners[idxSpawner] == null)
+            {
+                Debug.LogWarning($"[EcoDigitalGameManager] Spawner inválido no tiro {shot} (idx {idxSpawner}).");
+                yield break;
+            }
+            Transform spawner = spawners[idxSpawner];
+
             // Direção “congelada” no instante do disparo (reto, sem perseguir).
             Vector3 dir = (eco.position - spawner.position);
-            dir.y = 0f; // opcional: trava no plano XZ; remova se quiser 3D completo
+            dir.y = 0f; // trava no plano XZ (2.5D). Remova se quiser 3D.
             Vector3 dirNorm = dir.sqrMagnitude > 0.0001f ? dir.normalized : spawner.forward;
 
             // Seleciona o prefab conforme a regra
-            var regra = regras[regraIndex];
             GameObject prefab = SelecionarPrefabParaTiro(regraIndex, shot);
-
             if (prefab == null)
             {
-                Debug.LogWarning($"[EcoDigitalGameManager] Prefab nulo na regra '{regra.stateName}'. Pulando tiro.");
+                Debug.LogWarning("[EcoDigitalGameManager] Prefab nulo. Pulando tiro.");
             }
             else
             {
-                GameObject go = Instantiate(prefab, spawner.position, Quaternion.LookRotation(dirNorm, Vector3.up));
+                GameObject go = Instantiate(prefab, spawner.position, Quaternion.identity);
 
-                // Inicializa movimento
+                // 1) Lança o projétil (mantém sua física/direção normal)
                 var tiro = go.GetComponent<EcoTiroProjetil>();
                 if (tiro != null)
                 {
-                    tiro.Lancar(dirNorm, velocidade);
+                    tiro.Lancar(dirNorm, velocidade); // mantém assinatura atual
+                }
+
+                // 2) Ajusta a orientação VISUAL com yaw extra do spawner (sem afetar a velocidade)
+                float yawExtra = ObterYawExtra(idxSpawner);
+                if (Mathf.Abs(yawExtra) > 0.01f)
+                {
+                    // Olha para a direção e aplica yaw adicional
+                    go.transform.rotation = Quaternion.LookRotation(dirNorm, Vector3.up) * Quaternion.Euler(0f, yawExtra, 0f);
                 }
                 else
                 {
-                    var rb = go.GetComponent<Rigidbody>();
-                    if (rb != null) rb.velocity = dirNorm * velocidade;
+                    // Garantir que olhe para o Eco mesmo sem yaw extra
+                    go.transform.rotation = Quaternion.LookRotation(dirNorm, Vector3.up);
                 }
             }
 
-            if (intervalo > 0f && shot < qtd - 1)
+            if (intervalo > 0f && shot < quantidade - 1)
                 yield return new WaitForSeconds(intervalo);
         }
+    }
+
+    private int SelecionarSpawnerParaTiro(int regraIndex)
+    {
+        // Se a lista de spawnersDoTurno NÃO estiver vazia, alterna entre eles a cada tiro
+        if (spawnersDoTurno != null && spawnersDoTurno.Length > 0)
+        {
+            int idx = spawnersDoTurno[_cursorAlternanciaSpawner % spawnersDoTurno.Length];
+            _cursorAlternanciaSpawner++;
+            return Mathf.Clamp(idx, 0, spawners.Length - 1);
+        }
+
+        // Caso contrário, usa o spawnerIndex da regra (com clamp)
+        var regra = regras[regraIndex];
+        return Mathf.Clamp(regra.spawnerIndex, 0, Mathf.Max(0, spawners.Length - 1));
+    }
+
+    private float ObterYawExtra(int idxSpawner)
+    {
+        if (yawExtraPorSpawner == null || yawExtraPorSpawner.Length == 0) return 0f;
+        if (idxSpawner < 0 || idxSpawner >= yawExtraPorSpawner.Length) return 0f;
+        return yawExtraPorSpawner[idxSpawner];
     }
 
     private GameObject SelecionarPrefabParaTiro(int regraIndex, int shotNumber)

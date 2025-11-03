@@ -470,6 +470,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   lifetime: 12
+  visualRoot: {fileID: 0}
+  eixoVisual: 1
+  inverterMovimento: 0
 --- !u!114 &3788173250887549877
 MonoBehaviour:
   m_ObjectHideFlags: 0

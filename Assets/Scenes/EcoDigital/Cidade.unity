@@ -1110,7 +1110,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   perfil: 1
-  animator: {fileID: 0}
+  animator: {fileID: 270811564}
   limites: {fileID: 0}
   raioBuscaDestino: 30
   distanciaChegada: 1
@@ -1158,7 +1158,7 @@ Animator:
   m_GameObject: {fileID: 270811559}
   m_Enabled: 1
   m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 9100000, guid: 3b2518cab2475c74882f9d347425b70b, type: 2}
+  m_Controller: {fileID: 9100000, guid: eb38eb67ad3dd7d48bbd2e8bf8e2225e, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
   m_ApplyRootMotion: 0
@@ -2883,6 +2883,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 944648769956328903, guid: c3998c650f9255d4694e0f01554190f4, type: 3}
+      propertyPath: m_Constraints
+      value: 112
+      objectReference: {fileID: 0}
     - target: {fileID: 1843422363859315594, guid: c3998c650f9255d4694e0f01554190f4, type: 3}
       propertyPath: sistemaMensagens
       value: 
@@ -3020,7 +3024,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   perfil: 0
-  animator: {fileID: 0}
+  animator: {fileID: 967229736}
   limites: {fileID: 0}
   raioBuscaDestino: 30
   distanciaChegada: 1
@@ -3068,7 +3072,7 @@ Animator:
   m_GameObject: {fileID: 967229731}
   m_Enabled: 1
   m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 9100000, guid: 2cfb10648219a494fb65ead04a833c01, type: 2}
+  m_Controller: {fileID: 9100000, guid: 02fb6880ba4d31f42998d20767d92254, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
   m_ApplyRootMotion: 0
@@ -3222,7 +3226,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   perfil: 1
-  animator: {fileID: 0}
+  animator: {fileID: 1022285961}
   limites: {fileID: 0}
   raioBuscaDestino: 30
   distanciaChegada: 1
@@ -3270,7 +3274,7 @@ Animator:
   m_GameObject: {fileID: 1022285956}
   m_Enabled: 1
   m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 9100000, guid: 3b2518cab2475c74882f9d347425b70b, type: 2}
+  m_Controller: {fileID: 9100000, guid: eb38eb67ad3dd7d48bbd2e8bf8e2225e, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
   m_ApplyRootMotion: 0
@@ -3529,7 +3533,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   perfil: 0
-  animator: {fileID: 0}
+  animator: {fileID: 1135763037}
   limites: {fileID: 0}
   raioBuscaDestino: 30
   distanciaChegada: 1
@@ -3577,7 +3581,7 @@ Animator:
   m_GameObject: {fileID: 1135763032}
   m_Enabled: 1
   m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 9100000, guid: 2cfb10648219a494fb65ead04a833c01, type: 2}
+  m_Controller: {fileID: 9100000, guid: 02fb6880ba4d31f42998d20767d92254, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
   m_ApplyRootMotion: 0
@@ -5897,7 +5901,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   perfil: 1
-  animator: {fileID: 0}
+  animator: {fileID: 1958486922}
   limites: {fileID: 0}
   raioBuscaDestino: 30
   distanciaChegada: 1
@@ -5945,7 +5949,7 @@ Animator:
   m_GameObject: {fileID: 1958486917}
   m_Enabled: 1
   m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 9100000, guid: 3b2518cab2475c74882f9d347425b70b, type: 2}
+  m_Controller: {fileID: 9100000, guid: eb38eb67ad3dd7d48bbd2e8bf8e2225e, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
   m_ApplyRootMotion: 0
@@ -6127,7 +6131,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   perfil: 0
-  animator: {fileID: 0}
+  animator: {fileID: 2053875302}
   limites: {fileID: 0}
   raioBuscaDestino: 30
   distanciaChegada: 1
@@ -6175,7 +6179,7 @@ Animator:
   m_GameObject: {fileID: 2053875297}
   m_Enabled: 1
   m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 9100000, guid: 2cfb10648219a494fb65ead04a833c01, type: 2}
+  m_Controller: {fileID: 9100000, guid: 02fb6880ba4d31f42998d20767d92254, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
   m_ApplyRootMotion: 0

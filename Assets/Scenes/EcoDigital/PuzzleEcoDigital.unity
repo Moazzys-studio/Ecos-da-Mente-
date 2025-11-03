@@ -1581,7 +1581,7 @@ Camera:
     height: 1
   near clip plane: 0.3
   far clip plane: 1000
-  field of view: 50
+  field of view: 60.03705
   orthographic: 0
   orthographic size: 5
   m_Depth: 0
@@ -2099,7 +2099,7 @@ MonoBehaviour:
   m_LookAt: {fileID: 6803489359391642257}
   m_Follow: {fileID: 6803489359391642257}
   m_Lens:
-    FieldOfView: 50
+    FieldOfView: 60.03705
     OrthographicSize: 5
     NearClipPlane: 0.3
     FarClipPlane: 1000
@@ -2514,7 +2514,7 @@ MonoBehaviour:
   mostrarNoStart: 0
   animatorCamera: {fileID: 1693258620}
   nomeTriggerCamera: Camera6
-  pularParaCameraInicialNoStart: 1
+  pularParaCameraInicialNoStart: 0
   modoEntradaInicial: 0
   nomeEstadoCameraInicial: CameraJogo7
   crossFadeDuration: 0.15

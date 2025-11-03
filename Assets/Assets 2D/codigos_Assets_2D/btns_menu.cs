@@ -30,4 +30,10 @@ public class btns_menu : MonoBehaviour
     {
         fases.SetActive(true);
     }
+    public void voltar_menu()
+    {
+      creditos.SetActive(false);
+        tutorial.SetActive(false);
+        fases.SetActive(false);
+    }
 }

@@ -10,46 +10,33 @@ public class PortaTrigger : MonoBehaviour
     [SerializeField] private ModoLado modo = ModoLado.Markers;
 
     [Header("Markers (recomendado)")]
-    [Tooltip("Empty posicionado FORA do vão (world).")]
+    [Tooltip("Empty FORA do vão (world).")]
     [SerializeField] private Transform pontoFora;
-    [Tooltip("Empty posicionado DENTRO do vão (world).")]
+    [Tooltip("Empty DENTRO do vão (world).")]
     [SerializeField] private Transform pontoDentro;
 
     [Header("Axis (alternativo)")]
-    [Tooltip("Eixo local que aponta para FORA quando usado o modo Axis.")]
     [SerializeField] private AxisLocal foraAxis = AxisLocal.Z;
-    [Tooltip("Se marcado, inverte o lado (FORA vira DENTRO).")]
     [SerializeField] private bool inverterAxis = false;
 
     [Header("Estabilidade")]
-    [Tooltip("Largura da zona neutra em metros (evita flip no meio do vão).")]
-    [SerializeField] private float zonaNeutra = 0.12f;
-    [Tooltip("Tempo mínimo após trocar de lado sem permitir nova troca (s).")]
-    [SerializeField] private float cooldownLado = 0.25f;
+    [Tooltip("Profundidade mínima (m) além do plano para confirmar DENTRO.")]
+    [SerializeField] private float confirmInsideDepth = 0.20f;
+    [Tooltip("Travar DENTRO até sair do trigger.")]
+    [SerializeField] private bool latchInsideUntilExit = true;
 
-    [Header("Player / Física")]
+    [Header("Player / Porta")]
     [SerializeField] private string tagPlayer = "Player";
-    [Tooltip("Opcional: distância máxima do centro do trigger para considerar a histerese (0 = desliga).")]
-    [SerializeField] private float raioHisterese = 0f;
-
-    [Header("Referência da porta")]
     [SerializeField] private PortaController porta;
 
     // Estado
-    private bool? foraAtual = null;
-    private float podeTrocarApos = 0f;
-
-    private Collider _col;
+    private bool insideLatched = false;   // quando true, não volta a FORA no Stay
+    private bool ultimoOutside = true;    // último lado conhecido (true=fora, false=dentro)
 
     private void Reset()
     {
-        _col = GetComponent<Collider>();
-        if (_col) _col.isTrigger = true;
-    }
-
-    private void Awake()
-    {
-        _col = GetComponent<Collider>();
+        var col = GetComponent<Collider>();
+        if (col) col.isTrigger = true;
     }
 
     private void OnValidate()
@@ -61,106 +48,99 @@ public class PortaTrigger : MonoBehaviour
     {
         if (!other.CompareTag(tagPlayer) || porta == null) return;
 
-        bool isFora = CalcularFora(other.transform.position, usarHisterese:false, out float s);
-        foraAtual = isFora;
-        podeTrocarApos = Time.time + cooldownLado;
+        bool isOutside = IsOutside(other.transform.position, out float signedDist);
+        ultimoOutside = isOutside;
 
-        porta.NotifyEnter(isFora);
-        porta.SetPlayerDentroDaSala(!isFora);
+        // abre para o lado certo
+        porta.NotifyEnter(isOutside);
 
-        Debug.Log($"[PortaTrigger:{name}] ENTER {other.name} | outside={isFora} | s={s:0.000}");
+        // feedback visual imediato: tocou no vão -> se veio de fora, já começa a esconder
+        porta.SetPlayerDentroDaSala(!isOutside);
+
+        // se já entrou o suficiente, trava "dentro"
+        if (!isOutside && signedDist <= -confirmInsideDepth)
+            insideLatched = true;
+
+        // Debug.Log($"ENTER | outside={isOutside} | s={signedDist:0.000}");
     }
 
     private void OnTriggerStay(Collider other)
     {
         if (!other.CompareTag(tagPlayer) || porta == null) return;
 
-        bool isFora = CalcularFora(other.transform.position, usarHisterese:true, out float s);
+        bool isOutside = IsOutside(other.transform.position, out float signedDist);
 
-        // trava lado por um curto período após a última troca
-        if (Time.time < podeTrocarApos && foraAtual.HasValue)
+        if (latchInsideUntilExit)
         {
-            isFora = foraAtual.Value;
-        }
-
-        if (!foraAtual.HasValue || isFora != foraAtual.Value)
-        {
-            // só permite trocar se cooldown passou
-            if (Time.time >= podeTrocarApos)
+            // Só permite mudar para DENTRO; nunca volta para FORA enquanto estiver no trigger
+            if (!insideLatched && !isOutside && signedDist <= -confirmInsideDepth)
             {
-                foraAtual = isFora;
-                podeTrocarApos = Time.time + cooldownLado;
-                porta.SetPlayerDentroDaSala(!isFora);
-                Debug.Log($"[PortaTrigger:{name}] STAY flip -> outside={isFora} | s={s:0.000}");
+                insideLatched = true;
+                porta.SetPlayerDentroDaSala(true); // garante invisível
             }
         }
+        else
+        {
+            // Sem latch: ainda assim pedimos profundidade mínima para considerar DENTRO
+            bool insideNow = (!isOutside && signedDist <= -confirmInsideDepth);
+            porta.SetPlayerDentroDaSala(insideNow);
+        }
+
+        ultimoOutside = isOutside;
     }
 
     private void OnTriggerExit(Collider other)
     {
         if (!other.CompareTag(tagPlayer) || porta == null) return;
 
-        porta.NotifyExit();
-        foraAtual = null;
+        // Recalcula de qual lado você está AO SAIR
+        bool isOutsideExit = IsOutside(other.transform.position, out float signedDistExit);
 
-        Debug.Log($"[PortaTrigger:{name}] EXIT {other.name}");
+        // **Regra nova**:
+        // - Saiu para FORA  -> mostra (visível=true)
+        // - Saiu para DENTRO -> mantém invisível (visível=false)
+        porta.SetPlayerDentroDaSala(!isOutsideExit ? true : false); 
+        // (equivalente: if (isOutsideExit) show; else hide)
+
+        porta.NotifyExit();          // agenda fechamento etc.
+        insideLatched = false;
+        ultimoOutside = isOutsideExit;
+
+        // Debug.Log($"EXIT | outsideExit={isOutsideExit} | sExit={signedDistExit:0.000}");
     }
 
-    // ---------- Cálculo do lado ----------
-    private bool CalcularFora(Vector3 posWorld, bool usarHisterese, out float s)
+    // -------- cálculo do lado e distância assinada ao plano --------
+    private bool IsOutside(Vector3 posWorld, out float signed)
     {
+        Vector3 n;     // normal apontando de DENTRO -> FORA
+        Vector3 M;     // ponto no plano médio
+
         if (modo == ModoLado.Markers && pontoFora != null && pontoDentro != null)
         {
-            // Normal definida por markers -> independente de rotação do pai
-            Vector3 pf = pontoFora.position;
-            Vector3 pd = pontoDentro.position;
-            Vector3 n  = (pf - pd).normalized;   // dentro -> fora
-            Vector3 M  = (pf + pd) * 0.5f;       // plano médio
-
-            s = Vector3.Dot(n, posWorld - M);    // >0 fora, <0 dentro
-            return AplicarHisterese(s, usarHisterese);
+            n = (pontoFora.position - pontoDentro.position).normalized;
+            M = (pontoFora.position + pontoDentro.position) * 0.5f;
+            signed = Vector3.Dot(n, posWorld - M);
+            return signed > 0f; // >0 FORA, <0 DENTRO
         }
         else
         {
-            // Axis local da moldura da porta
-            Vector3 nLocal = Vector3.forward;
-            if (foraAxis == AxisLocal.X) nLocal = Vector3.right;
-            else if (foraAxis == AxisLocal.Y) nLocal = Vector3.up;
+            Vector3 axis = (foraAxis == AxisLocal.X ? Vector3.right
+                         : (foraAxis == AxisLocal.Y ? Vector3.up : Vector3.forward));
+            if (inverterAxis) axis = -axis;
 
-            if (inverterAxis) nLocal = -nLocal;
-
-            // Converte posição para espaço local da porta
             Vector3 localPos = transform.InverseTransformPoint(posWorld);
-            Vector3 n = nLocal.normalized;
-            Vector3 M = Vector3.zero; // plano no centro local
+            n = axis.normalized;
+            M = Vector3.zero;
 
-            s = Vector3.Dot(n, localPos - M);    // >0 fora, <0 dentro (no espaço local)
-            return AplicarHisterese(s, usarHisterese);
-        }
-    }
-
-    private bool AplicarHisterese(float s, bool usarHisterese)
-    {
-        if (!usarHisterese || !foraAtual.HasValue)
-            return s > 0f;
-
-        // zona neutra ao redor do plano (em unidades do mesmo espaço do cálculo)
-        if (foraAtual.Value)   // estava FORA
-        {
-            if (s < -zonaNeutra) return false; // cruza de vez para dentro
-            else return true;                  // mantém FORA na zona neutra
-        }
-        else                    // estava DENTRO
-        {
-            if (s > +zonaNeutra) return true;  // cruza de vez para fora
-            else return false;                 // mantém DENTRO na zona neutra
+            signed = Vector3.Dot(n, localPos - M);
+            return signed > 0f;
         }
     }
 
 #if UNITY_EDITOR
-    private void OnDrawGizmos()
+    private void OnDrawGizmosSelected()
     {
-        Gizmos.color = new Color(1f, 0.9f, 0.2f, 0.9f);
+        Gizmos.color = new Color(0,1,1,0.9f);
         if (GetComponent<Collider>() is BoxCollider b)
         {
             Gizmos.matrix = transform.localToWorldMatrix;
@@ -168,7 +148,7 @@ public class PortaTrigger : MonoBehaviour
             Gizmos.matrix = Matrix4x4.identity;
         }
 
-        if (modo == ModoLado.Markers && pontoFora != null && pontoDentro != null)
+        if (modo == ModoLado.Markers && pontoFora && pontoDentro)
         {
             Vector3 pf = pontoFora.position;
             Vector3 pd = pontoDentro.position;
@@ -178,26 +158,11 @@ public class PortaTrigger : MonoBehaviour
             Gizmos.color = Color.cyan;
             Gizmos.DrawLine(pd, pf);
             Gizmos.DrawSphere(pd, 0.05f); // dentro
-            Gizmos.color = Color.blue;
             Gizmos.DrawSphere(pf, 0.05f); // fora
 
-            // zona neutra
-            Gizmos.color = new Color(0.2f, 1f, 1f, 0.6f);
-            Gizmos.DrawLine(M - n * 0.4f, M + n * 0.4f);
-            Gizmos.DrawLine(M + n * zonaNeutra, M + n * (zonaNeutra + 0.2f));
-            Gizmos.DrawLine(M - n * zonaNeutra, M - n * (zonaNeutra + 0.2f));
-        }
-        else
-        {
-            // Eixo local
-            Vector3 n = (foraAxis == AxisLocal.X ? transform.right :
-                        (foraAxis == AxisLocal.Y ? transform.up : transform.forward)) * (inverterAxis ? -1f : 1f);
-
-            Vector3 M = transform.position;
-            Gizmos.color = Color.cyan;
-            Gizmos.DrawLine(M - n * 0.5f, M + n * 0.5f);
-            Gizmos.DrawWireSphere(M + n * zonaNeutra, 0.05f);
-            Gizmos.DrawWireSphere(M - n * zonaNeutra, 0.05f);
+            // faixa de confirmação de "dentro"
+            Gizmos.color = new Color(1,0.6f,0,0.6f);
+            Gizmos.DrawLine(M - n * confirmInsideDepth, M - n * (confirmInsideDepth + 0.2f));
         }
     }
 #endif

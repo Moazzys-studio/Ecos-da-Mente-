@@ -180,6 +180,7 @@ public class eco_movimento : MonoBehaviour
     {
         if (collision.gameObject.CompareTag("morre"))
     {
+        Eco_Streamer_Variaveis.vida_ecoStreamer--;
         // Reseta posição e velocidade
         transform.position = posicaoInicial;
         _rb.velocity = Vector3.zero;

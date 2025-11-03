@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 1ee983d8d8277df4c88756524658d5e7
+guid: af654d783ed43584aaed8878c9d9f6c7
 TextureImporter:
   internalIDToNameTable: []
   externalObjects: {}
@@ -110,7 +110,7 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Ecos da mente UIUX (4) 1_0
+      name: Ecos da mente UIUX (5)_0
       rect:
         serializedVersion: 2
         x: 100
@@ -124,14 +124,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 0999d28c7d88af143a6fbe50f67cef4a
-      internalID: 430831863
+      spriteID: 96ff0d87291509242b52b4c483e289de
+      internalID: 1513328429
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Ecos da mente UIUX (4) 1_1
+      name: Ecos da mente UIUX (5)_1
       rect:
         serializedVersion: 2
         x: 420
@@ -145,14 +145,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: ae8db6a102236864ea0fdd5fa37856d8
-      internalID: -1458206498
+      spriteID: 5bcf8a9328e999e489ab2756b370ed61
+      internalID: 875518968
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Ecos da mente UIUX (4) 1_2
+      name: Ecos da mente UIUX (5)_2
       rect:
         serializedVersion: 2
         x: 100
@@ -166,14 +166,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: c45f8c77088910240a3e2967a6979f29
-      internalID: 485901558
+      spriteID: 41d9b6af8b7f97a479d39f67b1e55365
+      internalID: -1818577212
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Ecos da mente UIUX (4) 1_3
+      name: Ecos da mente UIUX (5)_3
       rect:
         serializedVersion: 2
         x: 100
@@ -187,8 +187,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 4a7082ffbf5774e4dbec76e0e770cd30
-      internalID: -707977672
+      spriteID: 0172b8f5d280658419f8ce1f3724905f
+      internalID: 377044059
       vertices: []
       indices: 
       edges: []
@@ -196,7 +196,7 @@ TextureImporter:
     outline: []
     physicsShape: []
     bones: []
-    spriteID: a50a5e9bf08933e48a64c0df939ab4c0
+    spriteID: e18e3e34a39c85047be00581ae3310ee
     internalID: 0
     vertices: []
     indices: 
@@ -204,10 +204,10 @@ TextureImporter:
     weights: []
     secondaryTextures: []
     nameFileIdTable:
-      Ecos da mente UIUX (4) 1_0: 430831863
-      Ecos da mente UIUX (4) 1_1: -1458206498
-      Ecos da mente UIUX (4) 1_2: 485901558
-      Ecos da mente UIUX (4) 1_3: -707977672
+      Ecos da mente UIUX (5)_0: 1513328429
+      Ecos da mente UIUX (5)_1: 875518968
+      Ecos da mente UIUX (5)_2: -1818577212
+      Ecos da mente UIUX (5)_3: 377044059
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

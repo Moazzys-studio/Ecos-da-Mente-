@@ -7,7 +7,7 @@ public class controle_inimigos : MonoBehaviour
     public List<Material> materiais = new List<Material>(); // Ex: 3 materiais (na ordem certa)
 
     [Header("Configurações da transição de cor")]
-    public int pontosParaMudarCor = 3;   // Quantos coletáveis precisa para completar a transição
+    public int pontosParaMudarCor = 20;   // Quantos coletáveis precisa para completar a transição
     public Color corInicial = Color.white;
     public Color corFinal = Color.red;
 

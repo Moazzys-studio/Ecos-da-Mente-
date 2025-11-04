@@ -390,6 +390,16 @@ public class PortaController : MonoBehaviour
         AplicarVisibilidade(true);
     }
 
+
+    // Torna a sala visível imediatamente, cancelando qualquer ocultação pendente.
+    public void ForcarSalaVisivel()
+    {
+        playerDentroDaSala = false;  // estado lógico
+        if (coVis != null) { StopCoroutine(coVis); coVis = null; }
+        visToken++;                  // invalida intents pendentes
+        AplicarVisibilidade(true);   // mostra já (usa SalaFader se estiver setado)
+    }
+
 #if UNITY_EDITOR
     [ContextMenu("TESTE: Invisível (como DENTRO)")]
     private void _TestOcultar() => AplicarVisibilidade(false);

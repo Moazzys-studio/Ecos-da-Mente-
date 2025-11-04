@@ -2514,7 +2514,7 @@ MonoBehaviour:
   mostrarNoStart: 0
   animatorCamera: {fileID: 1693258620}
   nomeTriggerCamera: Camera6
-  pularParaCameraInicialNoStart: 0
+  pularParaCameraInicialNoStart: 1
   modoEntradaInicial: 0
   nomeEstadoCameraInicial: CameraJogo7
   crossFadeDuration: 0.15

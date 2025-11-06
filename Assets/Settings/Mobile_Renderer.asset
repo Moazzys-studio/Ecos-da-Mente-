@@ -20,7 +20,7 @@ MonoBehaviour:
   passIndex: 0
   bindDepthStencilAttachment: 0
   m_Version: 1
---- !u!114 &-230267057193412743
+--- !u!114 &-6057315844701262281
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -29,17 +29,17 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6d613f08f173d4dd895bb07b3230baa9, type: 3}
-  m_Name: FullScreenPassRendererFeature
+  m_Script: {fileID: 11500000, guid: 8069562df55d6af44b88ea62724df6b3, type: 3}
+  m_Name: DaltonismoFeature
   m_EditorClassIdentifier: 
-  m_Active: 0
-  injectionPoint: 600
-  fetchColorBuffer: 1
-  requirements: 0
-  passMaterial: {fileID: -876546973899608171, guid: e4df97029363aa74280d0fdb0366c5a2, type: 3}
-  passIndex: 0
-  bindDepthStencilAttachment: 0
-  m_Version: 1
+  m_Active: 1
+  shaderURP: {fileID: 4800000, guid: beb289327a7d5e94b89d12595bf10bc4, type: 3}
+  intensidade: 1
+  modo: 0
+  customRow0: {x: 1, y: 0, z: 0}
+  customRow1: {x: 0, y: 1, z: 0}
+  customRow2: {x: 0, y: 0, z: 1}
+  passEvent: 600
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -56,8 +56,8 @@ MonoBehaviour:
     debugReplacementPS: {fileID: 4800000, guid: cf852408f2e174538bcd9b7fda1c5ae7, type: 3}
     hdrDebugViewPS: {fileID: 4800000, guid: 573620ae32aec764abd4d728906d2587, type: 3}
   m_RendererFeatures:
-  - {fileID: -230267057193412743}
-  m_RendererFeatureMap: 791783dc54edcdfc
+  - {fileID: -6057315844701262281}
+  m_RendererFeatureMap: 376e3c105517f0ab
   m_UseNativeRenderPass: 1
   postProcessData: {fileID: 11400000, guid: 41439944d30ece34e96484bdb6645b55, type: 2}
   xrSystemData: {fileID: 11400000, guid: 60e1133243b97e347b653163a8c01b64, type: 2}

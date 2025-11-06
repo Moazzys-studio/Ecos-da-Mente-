@@ -5,74 +5,72 @@ using UnityEngine.UI;
 
 public class creditos : MonoBehaviour
 {
-    public Image[] imagens;            // Arraste suas 8 imagens do Canvas
-    public float tempoPorImagem = 3f;  // Tempo que cada imagem fica visível
-    public float duracaoAnimacao = 0.5f; // Velocidade do zoom-in
+   [Header("creditos")]
+    public RectTransform imagemUI;
 
-    private Coroutine slideshowCoroutine;
+    [Header("Configurações de Movimento")]
+    public float velocidade = 200f;
+    public Vector2 posicaoFinal;
+
+    [Header("Delay")]
+    public float delayInicial = 1f;
+
+    [Header("botão Voltar")]
+    public GameObject objetoParaAtivar;
+
+    private bool chegou = false;
+    private bool podeSubir = false;
+    private Vector2 posicaoInicial;
+
+    void Start()
+    {
+        posicaoInicial = imagemUI.anchoredPosition;
+    }
 
     void OnEnable()
     {
-        // Sempre que os créditos forem ativados, reinicia o slideshow
-        ResetarImagens();
-        if (imagens.Length > 0)
-            slideshowCoroutine = StartCoroutine(RodarSlideshow());
+        ResetarCreditos();
+        Invoke(nameof(AtivarMovimento), delayInicial); 
     }
 
-    void OnDisable()
+    void Update()
     {
-        // Para a coroutine quando o painel de créditos desativar
-        if (slideshowCoroutine != null)
-            StopCoroutine(slideshowCoroutine);
-    }
+        if (!podeSubir || chegou || imagemUI == null) return;
 
-    void ResetarImagens()
-    {
-        // Desliga todas as imagens
-        foreach (var img in imagens)
+        imagemUI.anchoredPosition = Vector2.MoveTowards(
+            imagemUI.anchoredPosition,
+            posicaoFinal,
+            velocidade * Time.deltaTime
+        );
+
+        if (imagemUI.anchoredPosition == posicaoFinal)
         {
-            img.gameObject.SetActive(false);
-            img.rectTransform.localScale = Vector3.one;
+            chegou = true;
+
+            if (objetoParaAtivar != null)
+                objetoParaAtivar.SetActive(true);
         }
     }
 
-    IEnumerator RodarSlideshow()
+    private void AtivarMovimento()
     {
-        for (int i = 0; i < imagens.Length; i++)
-        {
-            // Liga a imagem atual
-            imagens[i].gameObject.SetActive(true);
-
-            // Começa pequena
-            RectTransform rt = imagens[i].rectTransform;
-            rt.localScale = Vector3.one * 0.5f;
-
-            // Anima crescendo até escala normal
-            float tempo = 0f;
-            while (tempo < duracaoAnimacao)
-            {
-                tempo += Time.deltaTime;
-                float t = tempo / duracaoAnimacao;
-                rt.localScale = Vector3.Lerp(Vector3.one * 0.5f, Vector3.one, t);
-                yield return null;
-            }
-
-            rt.localScale = Vector3.one;
-
-            // Se NÃO for a última imagem, espera e depois desativa
-            if (i < imagens.Length - 1)
-            {
-                yield return new WaitForSeconds(tempoPorImagem);
-                imagens[i].gameObject.SetActive(false);
-            }
-        }
-
-        // Quando terminar, a última imagem permanece na tela
+        podeSubir = true;
     }
-            public void Voltar()
-        {
-            gameObject.SetActive(false);
-        }
+
+    private void ResetarCreditos()
+    {
+        imagemUI.anchoredPosition = posicaoInicial;
+        chegou = false;
+        podeSubir = false;
+
+        if (objetoParaAtivar != null)
+            objetoParaAtivar.SetActive(false);
+    }
+
+    public void FecharCreditos()
+    {
+        gameObject.SetActive(false);
+    }
 }
 
 

@@ -5,15 +5,16 @@ using UnityEngine.UI;
 
 public class btns_menu : MonoBehaviour
 {
-   public GameObject creditos;
+    public GameObject creditos;
     public GameObject tutorial;
     public GameObject fases;
-
+    public GameObject config;
     void Start()
     {
         creditos.SetActive(false);
         tutorial.SetActive(false);
         fases.SetActive(false);
+        config.SetActive(false);
     }
 
     public void Creditos()
@@ -32,8 +33,13 @@ public class btns_menu : MonoBehaviour
     }
     public void voltar_menu()
     {
-      creditos.SetActive(false);
+        creditos.SetActive(false);
         tutorial.SetActive(false);
         fases.SetActive(false);
+        config.SetActive(false);
+    }
+    public void Configura()
+    {
+       config.SetActive(true);
     }
 }

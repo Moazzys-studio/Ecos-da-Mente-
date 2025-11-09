@@ -4,20 +4,34 @@ using UnityEngine.Rendering.Universal;
 
 public class DaltonismoFeature : ScriptableRendererFeature
 {
-    public enum Modo { Nenhum, Protanopia, Deuteranopia, Tritanopia, Custom }
+    public enum Modo
+    {
+        Nenhum = 0,
+        Protanopia = 1,
+        Deuteranopia = 2,
+        Tritanopia = 3,
+        Achromatopsia = 4,
+        Achromatomalia = 5
+    }
 
     [Header("Config")]
+    [Tooltip("Shader Hidden/Daltonismo/URPBlit (usa _Mode e _Intensity).")]
     public Shader shaderURP;
-    [Range(0f,1f)] public float intensidade = 1f;
-    public Modo modo = Modo.Protanopia;
 
-    [Tooltip("Usado só no modo CUSTOM (linhas da matriz RGB).")]
-    public Vector3 customRow0 = new Vector3(1,0,0);
-    public Vector3 customRow1 = new Vector3(0,1,0);
-    public Vector3 customRow2 = new Vector3(0,0,1);
+    [Range(0f, 1f)]
+    public float intensidade = 1f;
+
+    public Modo modo = Modo.Nenhum;
 
     [Tooltip("Evento da Pass")]
-    public RenderPassEvent passEvent = RenderPassEvent.BeforeRenderingPostProcessing;
+    public RenderPassEvent passEvent = RenderPassEvent.AfterRendering; // afeta mundo + UI (Screen Space - Camera)
+
+    [Tooltip("Ignorar câmeras que não são do jogo (Scene/Preview/UI Overlay).")]
+    public bool ignorarNaoGame = true;
+
+    // IDs de propriedades (faltavam, causavam CS0103)
+    static readonly int _IntensityID = Shader.PropertyToID("_Intensity");
+    static readonly int _ModeID      = Shader.PropertyToID("_Mode");
 
     Material _mat;
     ColorBlitPass _pass;
@@ -25,14 +39,32 @@ public class DaltonismoFeature : ScriptableRendererFeature
     class ColorBlitPass : ScriptableRenderPass
     {
         readonly ProfilingSampler _prof = new ProfilingSampler("Daltonismo Blit (URP14)");
+        readonly System.Func<Camera, bool> _podeProcessar;
         Material _mat;
-        RTHandle _cameraColor;
+
+        RTHandle _cameraColor; // destino final
+        RTHandle _tempRT;      // RT temporário (evita blit in-place)
         float _intensity;
 
-        public ColorBlitPass(Material mat, RenderPassEvent evt)
+        // Flags de compatibilidade: Blitter usa _BlitTexture; cmd.Blit liga _MainTex
+        bool _usaBlitter;
+
+        // IDs locais (para evitar string a cada frame)
+        static readonly int _IntensityID = Shader.PropertyToID("_Intensity");
+
+        public ColorBlitPass(Material mat, RenderPassEvent evt, System.Func<Camera, bool> filtroCamera)
         {
             _mat = mat;
             renderPassEvent = evt;
+            _podeProcessar = filtroCamera;
+            ConfigureInput(ScriptableRenderPassInput.Color);
+            _usaBlitter = (mat != null && mat.HasProperty("_BlitTexture"));
+        }
+
+        public void RefreshMaterial(Material mat)
+        {
+            _mat = mat;
+            _usaBlitter = (mat != null && mat.HasProperty("_BlitTexture"));
         }
 
         public void SetTarget(RTHandle colorHandle, float intensity)
@@ -41,19 +73,45 @@ public class DaltonismoFeature : ScriptableRendererFeature
             _intensity = intensity;
         }
 
+        public override void OnCameraSetup(CommandBuffer cmd, ref RenderingData renderingData)
+        {
+            if (_mat == null || _cameraColor == null) return;
+            if (_podeProcessar != null && !_podeProcessar(renderingData.cameraData.camera)) return;
+
+            var desc = renderingData.cameraData.cameraTargetDescriptor;
+            desc.depthBufferBits = 0;
+            RenderingUtils.ReAllocateIfNeeded(
+                ref _tempRT, desc, FilterMode.Bilinear, TextureWrapMode.Clamp, name: "_DaltonismoTmp");
+        }
+
         public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData)
         {
             if (_mat == null || _cameraColor == null) return;
-
             var cam = renderingData.cameraData.camera;
-            if (cam.cameraType != CameraType.Game) return; // evita Scene/Preview
+            if (_podeProcessar != null && !_podeProcessar(cam)) return;
 
             var cmd = CommandBufferPool.Get();
             using (new ProfilingScope(cmd, _prof))
             {
-                _mat.SetFloat("_Intensity", _intensity);
-                // Blit em-place (padrão URP 14)
-                Blitter.BlitCameraTexture(cmd, _cameraColor, _cameraColor, _mat, 0);
+                _mat.SetFloat(_IntensityID, _intensity);
+
+                // Blit seguro: NUNCA src==dst
+                if (_usaBlitter)
+                {
+#if UNITY_2022_2_OR_NEWER
+                    Blitter.BlitCameraTexture(cmd, _cameraColor, _tempRT, _mat, 0);
+                    Blitter.BlitCameraTexture(cmd, _tempRT, _cameraColor);
+#else
+                    cmd.Blit(_cameraColor, _tempRT, _mat, 0);
+                    cmd.Blit(_tempRT, _cameraColor);
+#endif
+                }
+                else
+                {
+                    // Compatível com shaders que usam _MainTex
+                    cmd.Blit(_cameraColor, _tempRT, _mat, 0);
+                    cmd.Blit(_tempRT, _cameraColor);
+                }
             }
             context.ExecuteCommandBuffer(cmd);
             CommandBufferPool.Release(cmd);
@@ -62,60 +120,71 @@ public class DaltonismoFeature : ScriptableRendererFeature
 
     public override void Create()
     {
-        if (shaderURP != null)
-            _mat = CoreUtils.CreateEngineMaterial(shaderURP);
-
-        _pass = new ColorBlitPass(_mat, passEvent);
+        CriarOuAtualizarMaterial();
+        _pass = new ColorBlitPass(_mat, passEvent, PodeProcessarCamera);
     }
 
-    void SetKeywordsAndProps()
+    void CriarOuAtualizarMaterial()
     {
-        if (_mat == null) return;
-
-        // limpa
-        _mat.DisableKeyword("MODE_PROTAN");
-        _mat.DisableKeyword("MODE_DEUTER");
-        _mat.DisableKeyword("MODE_TRITAN");
-        _mat.DisableKeyword("MODE_CUSTOM");
-
-        // define
-        switch (modo)
+        if (shaderURP != null)
         {
-            case Modo.Protanopia:   _mat.EnableKeyword("MODE_PROTAN");  break;
-            case Modo.Deuteranopia: _mat.EnableKeyword("MODE_DEUTER");  break;
-            case Modo.Tritanopia:   _mat.EnableKeyword("MODE_TRITAN");  break;
-            case Modo.Custom:
-                _mat.EnableKeyword("MODE_CUSTOM");
-                _mat.SetVector("_CustomRow0", (Vector4)customRow0);
-                _mat.SetVector("_CustomRow1", (Vector4)customRow1);
-                _mat.SetVector("_CustomRow2", (Vector4)customRow2);
-                break;
-            case Modo.Nenhum:
-            default:
-                // nenhuma keyword => matriz identidade no shader
-                break;
+            if (_mat == null || _mat.shader != shaderURP)
+            {
+                CoreUtils.Destroy(_mat);
+                _mat = CoreUtils.CreateEngineMaterial(shaderURP);
+            }
+        }
+        else
+        {
+            CoreUtils.Destroy(_mat);
+            _mat = null;
         }
     }
 
-    // URP 14: configurar alvos/entradas AQUI, NÃO em AddRenderPasses
+    bool PodeProcessarCamera(Camera cam)
+    {
+        if (!ignorarNaoGame) return true;
+        if (cam == null) return false;
+        return cam.cameraType == CameraType.Game;
+    }
+
+    void SetShaderParams()
+    {
+        if (_mat == null) return;
+        _mat.SetFloat(_ModeID, (float)modo);
+        _mat.SetFloat(_IntensityID, intensidade);
+    }
+
+    // ========= MÉTODOS PÚBLICOS =========
+    public void ApplyParamsNow()
+    {
+        if (_mat == null) CriarOuAtualizarMaterial();
+        SetShaderParams();
+        if (_pass != null) _pass.RefreshMaterial(_mat);
+    }
+
+    public void SetModoUI(int modoIndex)
+    {
+        modo = (Modo)Mathf.Clamp(modoIndex, 0, 5);
+        ApplyParamsNow();
+    }
+    // ====================================
+
     public override void SetupRenderPasses(ScriptableRenderer renderer, in RenderingData renderingData)
     {
         if (_mat == null) return;
-        if (renderingData.cameraData.cameraType != CameraType.Game) return;
+        if (ignorarNaoGame && renderingData.cameraData.cameraType != CameraType.Game) return;
 
-        // Garante Color input para o shader
-        _pass.ConfigureInput(ScriptableRenderPassInput.Color);
-
-        // Passa o target da câmera (permitido aqui)
         _pass.SetTarget(renderer.cameraColorTargetHandle, intensidade);
     }
 
     public override void AddRenderPasses(ScriptableRenderer renderer, ref RenderingData renderingData)
     {
         if (_mat == null) return;
-        if (renderingData.cameraData.cameraType != CameraType.Game) return;
+        if (ignorarNaoGame && renderingData.cameraData.cameraType != CameraType.Game) return;
 
-        SetKeywordsAndProps();
+        SetShaderParams();                 // garante _Mode/_Intensity corretos
+        _pass.renderPassEvent = passEvent; // respeita o Inspector
         renderer.EnqueuePass(_pass);
     }
 
@@ -123,4 +192,14 @@ public class DaltonismoFeature : ScriptableRendererFeature
     {
         if (disposing) CoreUtils.Destroy(_mat);
     }
+
+#if UNITY_EDITOR
+    void OnValidate()
+    {
+        CriarOuAtualizarMaterial();
+        if (_pass != null) _pass.RefreshMaterial(_mat);
+        if (_pass != null) _pass.renderPassEvent = passEvent;
+        SetShaderParams();
+    }
+#endif
 }

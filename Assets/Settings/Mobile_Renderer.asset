@@ -35,11 +35,9 @@ MonoBehaviour:
   m_Active: 1
   shaderURP: {fileID: 4800000, guid: beb289327a7d5e94b89d12595bf10bc4, type: 3}
   intensidade: 1
-  modo: 0
-  customRow0: {x: 1, y: 0, z: 0}
-  customRow1: {x: 0, y: 1, z: 0}
-  customRow2: {x: 0, y: 0, z: 1}
-  passEvent: 600
+  modo: 5
+  passEvent: 1000
+  ignorarNaoGame: 1
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0

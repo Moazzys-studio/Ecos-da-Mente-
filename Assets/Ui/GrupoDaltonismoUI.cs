@@ -1,185 +1,139 @@
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 
-public class GrupoDaltonismoUI : MonoBehaviour
+public class GrupoDaltonismoUI_Slider : MonoBehaviour
 {
-    [Header("Renderer Feature (ARRASTE O ASSET)")]
-    [SerializeField] private DaltonismoFeature daltonismoFeature; // ScriptableObject do Renderer
+    [Header("Referências")]
+    [SerializeField] private DaltonismoFeature daltonismoFeature;
+    [SerializeField] private Slider sliderModo;         // 0..5 (snap)
+    [SerializeField] private Slider sliderIntensidade;  // 0..1
+    [SerializeField] private ChaveUI chaveAtivar;       // chave custom
+    [SerializeField] private TextMeshProUGUI textoModo; // rótulo TMP
 
-    [Header("Switches (ChaveUI)")]
-    [SerializeField] private ChaveUI swProtanopia;
-    [SerializeField] private ChaveUI swDeuteranopia;
-    [SerializeField] private ChaveUI swTritanopia;
+    private const string KEY_ATIVO = "daltonismo_ativo";
+    private const string KEY_MODO  = "daltonismo_modo";
+    private const string KEY_INT   = "daltonismo_intensidade";
 
-    [Header("Intensidade (opcional)")]
-    [SerializeField] private Slider sliderIntensidade = null; // 0..1
+    private readonly string[] nomesModos =
+    {
+        "Desativado",     // 0 = Nenhum
+        "Protanopia",     // 1
+        "Deuteranopia",   // 2
+        "Tritanopia",     // 3
+        "Achromatopsia",  // 4
+        "Achromatomalia"  // 5
+    };
 
-    [Header("Comportamento")]
-    [Tooltip("Permitir que nenhum modo fique ligado (desliga efeito)?")]
-    [SerializeField] private bool permitirNenhum = true;
-
-    // guarda último ligado para evitar ficar sem seleção quando permitirNenhum=false
-    private ChaveUI _ultimoLigado;
+    private bool carregando = false;
 
     private void Awake()
     {
-        // Conecta eventos
-        if (swProtanopia) swProtanopia.aoMudar.AddListener(OnProtanChanged);
-        if (swDeuteranopia) swDeuteranopia.aoMudar.AddListener(OnDeuterChanged);
-        if (swTritanopia) swTritanopia.aoMudar.AddListener(OnTritanChanged);
+        carregando = true;
 
-        if (sliderIntensidade)
-        {
-            sliderIntensidade.minValue = 0f;
-            sliderIntensidade.maxValue = 1f;
-            sliderIntensidade.onValueChanged.AddListener(OnIntensityChanged);
-        }
+        int ativo = PlayerPrefs.GetInt(KEY_ATIVO, 0);
+        int modo  = Mathf.Clamp(PlayerPrefs.GetInt(KEY_MODO, 0), 0, 5);
+        float intensidade = Mathf.Clamp01(PlayerPrefs.GetFloat(KEY_INT, 1f));
 
-        // Estado inicial: se nenhum marcado e não pode ficar sem, liga Protanopia
-        GarantirEstadoInicial();
-        AplicarModoAtual();
-        AplicarIntensidadeAtual();
+        sliderModo.minValue = 0; sliderModo.maxValue = 5; sliderModo.wholeNumbers = true;
+        sliderModo.SetValueWithoutNotify(modo);
+
+        sliderIntensidade.minValue = 0; sliderIntensidade.maxValue = 1;
+        sliderIntensidade.SetValueWithoutNotify(intensidade);
+
+        chaveAtivar.Definir(ativo == 1, false, true);
+        AtualizarTexto(modo);
+
+        AplicarModo(modo, ativo == 1);
+        AplicarIntensidade(intensidade);
+
+        sliderModo.onValueChanged.AddListener(OnSliderModo);
+        sliderIntensidade.onValueChanged.AddListener(OnIntensidade);
+        chaveAtivar.aoMudar.AddListener(OnChave);
+
+        carregando = false;
     }
 
     private void OnDestroy()
     {
-        if (swProtanopia) swProtanopia.aoMudar.RemoveListener(OnProtanChanged);
-        if (swDeuteranopia) swDeuteranopia.aoMudar.RemoveListener(OnDeuterChanged);
-        if (swTritanopia) swTritanopia.aoMudar.RemoveListener(OnTritanChanged);
-        if (sliderIntensidade) sliderIntensidade.onValueChanged.RemoveListener(OnIntensityChanged);
+        sliderModo.onValueChanged.RemoveListener(OnSliderModo);
+        sliderIntensidade.onValueChanged.RemoveListener(OnIntensidade);
+        chaveAtivar.aoMudar.RemoveListener(OnChave);
     }
 
-    // -------------------- Callbacks --------------------
-
-    private void OnProtanChanged(bool on)
+    private void OnSliderModo(float valor)
     {
-        if (on)
-        {
-            DesligarExceto(swProtanopia);
-            _ultimoLigado = swProtanopia;
-            SetModo(DaltonismoFeature.Modo.Protanopia);
-        }
-        else
-        {
-            SeNenhumSelecionadoTrataVazio();
-        }
+        int modo = Mathf.RoundToInt(valor);
+        AtualizarTexto(modo);
+
+        if (!chaveAtivar.EstaLigado && modo > 0)
+            chaveAtivar.Definir(true, true);
+
+        if (chaveAtivar.EstaLigado)
+            AplicarModo(modo, true);
+
+        Salvar();
     }
 
-    private void OnDeuterChanged(bool on)
+    private void OnIntensidade(float valor)
     {
-        if (on)
-        {
-            DesligarExceto(swDeuteranopia);
-            _ultimoLigado = swDeuteranopia;
-            SetModo(DaltonismoFeature.Modo.Deuteranopia);
-        }
-        else
-        {
-            SeNenhumSelecionadoTrataVazio();
-        }
+        AplicarIntensidade(valor);
+        Salvar();
     }
 
-    private void OnTritanChanged(bool on)
+    private void OnChave(bool ligada)
     {
-        if (on)
+        if (!ligada)
         {
-            DesligarExceto(swTritanopia);
-            _ultimoLigado = swTritanopia;
-            SetModo(DaltonismoFeature.Modo.Tritanopia);
+            sliderModo.SetValueWithoutNotify(0);
+            AtualizarTexto(0);
+            AplicarModo(0, false);
         }
-        else
+        else if (Mathf.Approximately(sliderModo.value, 0f))
         {
-            SeNenhumSelecionadoTrataVazio();
+            sliderModo.SetValueWithoutNotify(1);
+            AtualizarTexto(1);
+            AplicarModo(1, true);
         }
+
+        Salvar();
     }
 
-    private void OnIntensityChanged(float v)
+    private void AtualizarTexto(int modo)
     {
-        if (daltonismoFeature == null) return;
+        modo = Mathf.Clamp(modo, 0, nomesModos.Length - 1);
+        if (textoModo) textoModo.text = nomesModos[modo];
+    }
+
+    private void AplicarModo(int modoIndex, bool ativo)
+    {
+        if (!daltonismoFeature) return;
+
+        if (!ativo)
+        {
+            daltonismoFeature.SetModoUI(0);     // Nenhum
+            daltonismoFeature.ApplyParamsNow(); // força update
+            return;
+        }
+
+        daltonismoFeature.SetModoUI(modoIndex);
+        daltonismoFeature.ApplyParamsNow();
+    }
+
+    private void AplicarIntensidade(float v)
+    {
+        if (!daltonismoFeature) return;
         daltonismoFeature.intensidade = Mathf.Clamp01(v);
-        // nada além disso — a feature lê esse valor a cada frame
+        daltonismoFeature.ApplyParamsNow();
     }
 
-    // -------------------- Helpers --------------------
-
-    private void DesligarExceto(ChaveUI keep)
+    private void Salvar()
     {
-        if (swProtanopia && swProtanopia != keep && swProtanopia.EstaLigado) swProtanopia.Definir(false, false);
-        if (swDeuteranopia && swDeuteranopia != keep && swDeuteranopia.EstaLigado) swDeuteranopia.Definir(false, false);
-        if (swTritanopia && swTritanopia != keep && swTritanopia.EstaLigado) swTritanopia.Definir(false, false);
-    }
+        if (carregando) return;
 
-    private void SeNenhumSelecionadoTrataVazio()
-    {
-        bool nenhum = !(swProtanopia && swProtanopia.EstaLigado)
-                   && !(swDeuteranopia && swDeuteranopia.EstaLigado)
-                   && !(swTritanopia && swTritanopia.EstaLigado);
-
-        if (!nenhum) return;
-
-        if (permitirNenhum)
-        {
-            SetModo(DaltonismoFeature.Modo.Nenhum);
-        }
-        else
-        {
-            // restaura último ligado ou força um padrão
-            var alvo = _ultimoLigado ?? swProtanopia;
-            if (alvo) alvo.Definir(true, true);
-        }
-    }
-
-    private void SetModo(DaltonismoFeature.Modo modo)
-    {
-        if (daltonismoFeature == null) return;
-        daltonismoFeature.modo = modo;
-        // AddRenderPasses/SetupRenderPasses vão ler isso no frame
-    }
-
-    private void GarantirEstadoInicial()
-    {
-        bool algum = (swProtanopia && swProtanopia.EstaLigado)
-                  || (swDeuteranopia && swDeuteranopia.EstaLigado)
-                  || (swTritanopia && swTritanopia.EstaLigado);
-
-        if (!algum)
-        {
-            if (permitirNenhum)
-            {
-                // todos off e modo Nenhum
-                SetModo(DaltonismoFeature.Modo.Nenhum);
-            }
-            else
-            {
-                // liga padrão (Protanopia)
-                if (swProtanopia) swProtanopia.Definir(true, false, true);
-                SetModo(DaltonismoFeature.Modo.Protanopia);
-                _ultimoLigado = swProtanopia;
-            }
-        }
-        else
-        {
-            // define _ultimoLigado baseado no que estiver on
-            if (swProtanopia && swProtanopia.EstaLigado) _ultimoLigado = swProtanopia;
-            else if (swDeuteranopia && swDeuteranopia.EstaLigado) _ultimoLigado = swDeuteranopia;
-            else if (swTritanopia && swTritanopia.EstaLigado) _ultimoLigado = swTritanopia;
-        }
-    }
-
-    private void AplicarModoAtual()
-    {
-        if (daltonismoFeature == null) return;
-
-        // espelha switches -> feature (caso já venham presetados no prefab/cena)
-        if (swProtanopia && swProtanopia.EstaLigado) daltonismoFeature.modo = DaltonismoFeature.Modo.Protanopia;
-        else if (swDeuteranopia && swDeuteranopia.EstaLigado) daltonismoFeature.modo = DaltonismoFeature.Modo.Deuteranopia;
-        else if (swTritanopia && swTritanopia.EstaLigado) daltonismoFeature.modo = DaltonismoFeature.Modo.Tritanopia;
-        else daltonismoFeature.modo = DaltonismoFeature.Modo.Nenhum;
-    }
-
-    private void AplicarIntensidadeAtual()
-    {
-        if (daltonismoFeature == null) return;
-        if (sliderIntensidade) daltonismoFeature.intensidade = sliderIntensidade.value;
+        PlayerPrefs.SetInt(KEY_ATIVO, chaveAtivar.EstaLigado ? 1 : 0);
+        PlayerPrefs.SetInt(KEY_MODO, Mathf.RoundToInt(sliderModo.value));
+        PlayerPrefs.SetFloat(KEY_INT, sliderIntensidade.value);
+        PlayerPrefs.Save();
     }
 }

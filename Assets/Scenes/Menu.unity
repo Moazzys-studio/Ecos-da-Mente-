@@ -191,7 +191,7 @@ Canvas:
   m_GameObject: {fileID: 354907}
   m_Enabled: 1
   serializedVersion: 3
-  m_RenderMode: 0
+  m_RenderMode: 1
   m_Camera: {fileID: 330585545}
   m_PlaneDistance: 100
   m_PixelPerfect: 0
@@ -199,7 +199,7 @@ Canvas:
   m_OverrideSorting: 0
   m_OverridePixelPerfect: 0
   m_SortingBucketNormalizedSize: 0
-  m_VertexColorAlwaysGammaSpace: 0
+  m_VertexColorAlwaysGammaSpace: 1
   m_AdditionalShaderChannelsFlag: 25
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0
@@ -319,6 +319,147 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4332182}
   m_CullTransparentMesh: 1
+--- !u!1001 &10494632
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 830303544266878513, guid: aa1cbdb29d466014e97dc35ff546f785, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2078961442197859600, guid: aa1cbdb29d466014e97dc35ff546f785, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3302415703642415273, guid: aa1cbdb29d466014e97dc35ff546f785, type: 3}
+      propertyPath: m_Camera
+      value: 
+      objectReference: {fileID: 330585545}
+    - target: {fileID: 3302415703642415273, guid: aa1cbdb29d466014e97dc35ff546f785, type: 3}
+      propertyPath: m_RenderMode
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3302415703642415273, guid: aa1cbdb29d466014e97dc35ff546f785, type: 3}
+      propertyPath: m_SortingOrder
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 5674117437247840894, guid: aa1cbdb29d466014e97dc35ff546f785, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6025802124320663264, guid: aa1cbdb29d466014e97dc35ff546f785, type: 3}
+      propertyPath: m_Name
+      value: CanvasConfiguracoes
+      objectReference: {fileID: 0}
+    - target: {fileID: 6464782972000998567, guid: aa1cbdb29d466014e97dc35ff546f785, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6529755921857003903, guid: aa1cbdb29d466014e97dc35ff546f785, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7318921099754845594, guid: aa1cbdb29d466014e97dc35ff546f785, type: 3}
+      propertyPath: m_Pivot.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7318921099754845594, guid: aa1cbdb29d466014e97dc35ff546f785, type: 3}
+      propertyPath: m_Pivot.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7318921099754845594, guid: aa1cbdb29d466014e97dc35ff546f785, type: 3}
+      propertyPath: m_AnchorMax.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7318921099754845594, guid: aa1cbdb29d466014e97dc35ff546f785, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7318921099754845594, guid: aa1cbdb29d466014e97dc35ff546f785, type: 3}
+      propertyPath: m_AnchorMin.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7318921099754845594, guid: aa1cbdb29d466014e97dc35ff546f785, type: 3}
+      propertyPath: m_AnchorMin.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7318921099754845594, guid: aa1cbdb29d466014e97dc35ff546f785, type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7318921099754845594, guid: aa1cbdb29d466014e97dc35ff546f785, type: 3}
+      propertyPath: m_SizeDelta.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7318921099754845594, guid: aa1cbdb29d466014e97dc35ff546f785, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7318921099754845594, guid: aa1cbdb29d466014e97dc35ff546f785, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7318921099754845594, guid: aa1cbdb29d466014e97dc35ff546f785, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7318921099754845594, guid: aa1cbdb29d466014e97dc35ff546f785, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7318921099754845594, guid: aa1cbdb29d466014e97dc35ff546f785, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7318921099754845594, guid: aa1cbdb29d466014e97dc35ff546f785, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7318921099754845594, guid: aa1cbdb29d466014e97dc35ff546f785, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7318921099754845594, guid: aa1cbdb29d466014e97dc35ff546f785, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7318921099754845594, guid: aa1cbdb29d466014e97dc35ff546f785, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7318921099754845594, guid: aa1cbdb29d466014e97dc35ff546f785, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7318921099754845594, guid: aa1cbdb29d466014e97dc35ff546f785, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7318921099754845594, guid: aa1cbdb29d466014e97dc35ff546f785, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7497869062448270619, guid: aa1cbdb29d466014e97dc35ff546f785, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7812514374153465562, guid: aa1cbdb29d466014e97dc35ff546f785, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8162023890572640434, guid: aa1cbdb29d466014e97dc35ff546f785, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: aa1cbdb29d466014e97dc35ff546f785, type: 3}
 --- !u!1 &106936191
 GameObject:
   m_ObjectHideFlags: 0
@@ -1197,7 +1338,7 @@ MonoBehaviour:
   m_RequiresOpaqueTextureOption: 2
   m_CameraType: 0
   m_Cameras: []
-  m_RendererIndex: -1
+  m_RendererIndex: 0
   m_VolumeLayerMask:
     serializedVersion: 2
     m_Bits: 1
@@ -1448,7 +1589,7 @@ Canvas:
   m_GameObject: {fileID: 388302125}
   m_Enabled: 1
   serializedVersion: 3
-  m_RenderMode: 0
+  m_RenderMode: 1
   m_Camera: {fileID: 330585545}
   m_PlaneDistance: 100
   m_PixelPerfect: 0
@@ -1456,7 +1597,7 @@ Canvas:
   m_OverrideSorting: 0
   m_OverridePixelPerfect: 0
   m_SortingBucketNormalizedSize: 0
-  m_VertexColorAlwaysGammaSpace: 0
+  m_VertexColorAlwaysGammaSpace: 1
   m_AdditionalShaderChannelsFlag: 25
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0
@@ -3667,7 +3808,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9c56c3a771aa608419bc6c25be8f5d0d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  matColorBlindness: {fileID: 2100000, guid: f961ddd3fd4441740822ff67683cc61f, type: 2}
 --- !u!4 &1098945137
 Transform:
   m_ObjectHideFlags: 0
@@ -5208,7 +5348,7 @@ Canvas:
   m_GameObject: {fileID: 1764308710}
   m_Enabled: 1
   serializedVersion: 3
-  m_RenderMode: 0
+  m_RenderMode: 1
   m_Camera: {fileID: 330585545}
   m_PlaneDistance: 100
   m_PixelPerfect: 0
@@ -5216,7 +5356,7 @@ Canvas:
   m_OverrideSorting: 0
   m_OverridePixelPerfect: 0
   m_SortingBucketNormalizedSize: 0
-  m_VertexColorAlwaysGammaSpace: 0
+  m_VertexColorAlwaysGammaSpace: 1
   m_AdditionalShaderChannelsFlag: 25
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0
@@ -5957,6 +6097,7 @@ SceneRoots:
   - {fileID: 330585546}
   - {fileID: 410087041}
   - {fileID: 388302129}
+  - {fileID: 10494632}
   - {fileID: 354911}
   - {fileID: 1764308714}
   - {fileID: 554021300}

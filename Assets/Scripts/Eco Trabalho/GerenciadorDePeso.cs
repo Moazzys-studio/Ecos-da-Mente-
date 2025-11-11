@@ -6,7 +6,7 @@ using UnityEditor;
 /// <summary>
 /// Lê o nível do "líquido" (0..1) de cada lado, converte a diferença em um
 /// <b>viés em graus</b> baseado no MaxAngle e envia para a <see cref="BalanceMecanics"/>.
-/// A mecânica transforma esse viés em <b>torque</b> (competição real contra o jogador).
+/// Também aciona os Particle Systems de cada bateria somente enquanto ela estiver ENCHENDO.
 /// </summary>
 /// <remarks>
 /// Regra de calibração para alcançar ~MaxAngle quando (esq=1, dir=0) ou vice-versa:
@@ -39,6 +39,19 @@ public class GerenciadorDePeso : MonoBehaviour
     [SerializeField, Tooltip("Transform do pêndulo (apenas para registrar rotação base no Editor).")]
     private Transform penduloRef;
 
+    [Header("Particle Systems (opcional)")]
+    [SerializeField, Tooltip("PS que toca enquanto a bateria ESQUERDA estiver enchendo.")]
+    private ParticleSystem psEsquerda;
+
+    [SerializeField, Tooltip("PS que toca enquanto a bateria DIREITA estiver enchendo.")]
+    private ParticleSystem psDireita;
+
+    [SerializeField, Min(0f), Tooltip("Delta mínimo (normalizado) para considerar que está enchendo. É escalado por deltaTime.")]
+    private float deltaMinPorSegundo = 0.2f;
+
+    [SerializeField, Min(0f), Tooltip("Atraso para desligar o PS após parar de encher (evita flicker).")]
+    private float stopDelay = 0.25f;
+
     [Header("Controle direto do líquido (0 a 1)")]
     [Tooltip("Nível da bateria ESQUERDA (0..1). Em Play é sobrescrito pelo fillLevel do LiquidoBateria.")]
     [Range(0f, 1f)] public float nivelEsquerda = 0.5f;
@@ -64,6 +77,10 @@ public class GerenciadorDePeso : MonoBehaviour
 
     private Quaternion baseRotacaoPendulo;
     private bool baseRegistrada = false;
+
+    // Controle de enchimento/PS
+    private float _prevNivelEsq, _prevNivelDir;
+    private float _ultimoEnchendoEsq, _ultimoEnchendoDir;
 
     /// <summary>Garante referências básicas quando possível.</summary>
     private void GarantirReferencias()
@@ -121,10 +138,17 @@ public class GerenciadorDePeso : MonoBehaviour
         if (bateriaEsquerda) nivelEsquerda = bateriaEsquerda.fillLevel;
         if (bateriaDireita)  nivelDireita  = bateriaDireita.fillLevel;
 
+        _prevNivelEsq = nivelEsquerda;
+        _prevNivelDir = nivelDireita;
+
         offsetPesoDeg = 0f;
 
         // Zera o viés inicial na mecânica por segurança
         if (mecanics != null) mecanics.SetWeightBias(0f);
+
+        // Garante PS desligados no início (opcional)
+        SafeStop(psEsquerda, true);
+        SafeStop(psDireita, true);
     }
 
     private void Update()
@@ -148,8 +172,15 @@ public class GerenciadorDePeso : MonoBehaviour
 #endif
         }
 
+        // Atualiza pesos
         AtualizarPesos();
         AplicarPesoNaBalanca();
+
+        // Atualiza PS de enchimento (somente em Play)
+        if (Application.isPlaying)
+            AtualizarParticleSystems();
+        else
+            _prevNivelEsq = nivelEsquerda; // evita detetar "enchendo" no editor
     }
 
 #if UNITY_EDITOR
@@ -204,8 +235,54 @@ public class GerenciadorDePeso : MonoBehaviour
             mecanics.SetWeightBias(Mathf.Clamp(offsetPesoDeg, -maxRef, maxRef));
     }
 
-    // ---------- Utilidades públicas ----------
+    // ---------- PS: ligar somente quando está ENCHENDO ----------
+    private void AtualizarParticleSystems()
+    {
+        // Epsilon em função do tempo para considerar "enchendo"
+        float eps = deltaMinPorSegundo * Mathf.Max(0.0001f, Time.deltaTime);
 
+        // Esquerda
+        float deltaE = nivelEsquerda - _prevNivelEsq;
+        bool enchendoEsq = deltaE > eps;
+        if (enchendoEsq)
+        {
+            SafePlay(psEsquerda);
+            _ultimoEnchendoEsq = Time.time;
+        }
+        else if (Time.time - _ultimoEnchendoEsq > stopDelay)
+        {
+            SafeStop(psEsquerda, false);
+        }
+        _prevNivelEsq = nivelEsquerda;
+
+        // Direita
+        float deltaD = nivelDireita - _prevNivelDir;
+        bool enchendoDir = deltaD > eps;
+        if (enchendoDir)
+        {
+            SafePlay(psDireita);
+            _ultimoEnchendoDir = Time.time;
+        }
+        else if (Time.time - _ultimoEnchendoDir > stopDelay)
+        {
+            SafeStop(psDireita, false);
+        }
+        _prevNivelDir = nivelDireita;
+    }
+
+    private static void SafePlay(ParticleSystem ps)
+    {
+        if (!ps) return;
+        if (!ps.isPlaying) ps.Play(true);
+    }
+    private static void SafeStop(ParticleSystem ps, bool clear)
+    {
+        if (!ps) return;
+        ps.Stop(true, ParticleSystemStopBehavior.StopEmitting);
+        if (clear) ps.Clear(true);
+    }
+
+    // ---------- Utilidades públicas ----------
     /// <summary>Define imediatamente os níveis de líquido (0..1) e aplica.</summary>
     public void SetNiveis(float esquerdo01, float direito01)
     {
@@ -213,6 +290,12 @@ public class GerenciadorDePeso : MonoBehaviour
         nivelDireita  = Mathf.Clamp01(direito01);
         AtualizarPesos();
         AplicarPesoNaBalanca();
+        // Atualiza PS imediatamente após set
+        if (Application.isPlaying)
+        {
+            _prevNivelEsq = nivelEsquerda;
+            _prevNivelDir = nivelDireita;
+        }
     }
 
 #if UNITY_EDITOR

@@ -12,6 +12,11 @@ public class TurnosManager : MonoBehaviour
     [SerializeField] private GameObject helly;
     [SerializeField] private Transform destinoHelly;
 
+    [Header("Pontos Iniciais (Idle)")]
+    [Tooltip("Empty Transform onde o NPC fica em Idle e para onde retorna no fim do turno.")]
+    [SerializeField] private Transform inicioSupervisor;
+    [SerializeField] private Transform inicioHelly;
+
     [Header("Câmeras (Cinemachine)")]
     [SerializeField] private CinemachineVirtualCamera vcamPrincipal;
     [SerializeField] private CinemachineVirtualCamera vcamSupervisor;
@@ -33,7 +38,8 @@ public class TurnosManager : MonoBehaviour
     [SerializeField] private float velocidadeAgente = 3.5f;
     [SerializeField] private float distanciaParada = 0.2f;
 
-    [Header("Animador (bools usadas)")]
+    [Header("Animator (bools)")]
+    [SerializeField] private string boolWalking  = "Walking";
     [SerializeField] private string boolCharging = "Charging";
 
     [Header("Sistema de Peso")]
@@ -45,26 +51,16 @@ public class TurnosManager : MonoBehaviour
 
     [Header("Turno 3 – Levas (competição)")]
     [SerializeField] private float leva3Dur = 10f;
-    [SerializeField] private float l3JitterHz = 6f;      // jitter aleatório (quanto maior, mais nervoso)
+    [SerializeField] private float l3JitterHz = 6f;
 
     [Header("Turno 3 – Leva 3 (alternância)")]
-    [SerializeField] private float l3IntervaloTroca = 0.25f; // alterna a direção a cada X s
-    [SerializeField] private float l3ForcaConst = 1f; // força constante aplicada na Leva 3
-
-
+    [SerializeField] private float l3IntervaloTroca = 0.25f;
+    [SerializeField] private float l3ForcaConst = 1f;
 
     [Header("Turno 3 - FOV")]
     [SerializeField] private float fovPadrao = 41f;
     [SerializeField] private float fovZoomOut = 63f;
-    [SerializeField] private float durAberturaFOV = 1.0f; // abre 41→63 no começo do T3
-
-
-
-    // Estado inicial
-    private Vector3 posInicialSupervisor;
-    private Quaternion rotInicialSupervisor;
-    private Vector3 posInicialHelly;
-    private Quaternion rotInicialHelly;
+    [SerializeField] private float durAberturaFOV = 1.0f;
 
     // Componentes
     private NavMeshAgent agenteSup;
@@ -82,10 +78,10 @@ public class TurnosManager : MonoBehaviour
     private float relogioT = 0f;
 
     // FOV T3
-    private bool fovDinamicoAtivo = false; // fechamento 63→41
+    private bool fovDinamicoAtivo = false;
     private float distSupInicial = 0f;
     private float distHellyInicial = 0f;
-    private bool fovAbrindo = false;   // abertura 41→63
+    private bool fovAbrindo = false;
     private float fovAbrirT = 0f;
 
     private Coroutine rotinaTurno;
@@ -94,8 +90,6 @@ public class TurnosManager : MonoBehaviour
     {
         if (supervisor != null)
         {
-            posInicialSupervisor = supervisor.transform.position;
-            rotInicialSupervisor = supervisor.transform.rotation;
             agenteSup = supervisor.GetComponent<NavMeshAgent>();
             animSup   = supervisor.GetComponent<Animator>();
             if (agenteSup != null)
@@ -103,11 +97,12 @@ public class TurnosManager : MonoBehaviour
                 agenteSup.speed = velocidadeAgente;
                 agenteSup.stoppingDistance = distanciaParada;
             }
+            // Garante Idle inicial
+            SetIdle(animSup);
         }
+
         if (helly != null)
         {
-            posInicialHelly = helly.transform.position;
-            rotInicialHelly = helly.transform.rotation;
             agenteHelly = helly.GetComponent<NavMeshAgent>();
             animHelly   = helly.GetComponent<Animator>();
             if (agenteHelly != null)
@@ -115,6 +110,24 @@ public class TurnosManager : MonoBehaviour
                 agenteHelly.speed = velocidadeAgente;
                 agenteHelly.stoppingDistance = distanciaParada;
             }
+            // Garante Idle inicial
+            SetIdle(animHelly);
+        }
+
+        // Se não arrastou os pontos iniciais, usa a posição atual como fallback
+        if (inicioSupervisor == null && supervisor != null)
+        {
+            GameObject t = new GameObject("InicioSupervisor (auto)");
+            t.transform.position = supervisor.transform.position;
+            t.transform.rotation = supervisor.transform.rotation;
+            inicioSupervisor = t.transform;
+        }
+        if (inicioHelly == null && helly != null)
+        {
+            GameObject t = new GameObject("InicioHelly (auto)");
+            t.transform.position = helly.transform.position;
+            t.transform.rotation = helly.transform.rotation;
+            inicioHelly = t.transform;
         }
 
         if (gerenciadorDePeso == null)
@@ -122,7 +135,7 @@ public class TurnosManager : MonoBehaviour
 
         if (vcamPrincipal != null) vcamPrincipal.m_Lens.FieldOfView = fovPadrao;
 
-        HideClock(); // relógio e pai ocultos
+        HideClock();
     }
 
     void Update()
@@ -136,6 +149,10 @@ public class TurnosManager : MonoBehaviour
 
         AtualizarFOVTurno3();
         AtualizarRelogio();
+
+        // Atualiza Walking on/off por velocidade (segurança extra)
+        AtualizarWalkingPorVelocidade(agenteSup, animSup);
+        AtualizarWalkingPorVelocidade(agenteHelly, animHelly);
     }
 
     // ---------------- Turnos ----------------
@@ -167,21 +184,28 @@ public class TurnosManager : MonoBehaviour
             SetVcamPrioridades(supervisorTop: true);
         }
 
-        MoverNPC(agenteSup, destinoSupervisor != null ? destinoSupervisor.position : supervisor.transform.position);
+        // Idle → Walking
+        GoTo(agenteSup, destinoSupervisor != null ? destinoSupervisor.position : supervisor.transform.position, animSup);
         yield return WaitAteChegar(agenteSup);
 
-        agenteSup.isStopped = true; animSup?.SetBool(boolCharging, true);
+        // Walking → Charging
+        SetCharging(animSup, true);
+
         SetVcamPrioridades(vcamEcoTop: true);
         yield return StartCoroutine(PreencherNivelLado(true, velocidadeCargaPlena));
 
         ShowClock(duracaoRelogioT1);
         yield return WaitRelogioTerminar();
 
-        // volta andando imediatamente
-        animSup?.SetBool(boolCharging, false);
-        MoverNPC(agenteSup, posInicialSupervisor);
+        // Charging → Walking (voltar)
+        SetCharging(animSup, false);
+        GoTo(agenteSup, inicioSupervisor.position, animSup);
+
         yield return WaitDelayAndChegar(agenteSup, delayEncerramento);
-        if (agenteSup != null) agenteSup.transform.rotation = rotInicialSupervisor;
+
+        // Walking → Idle ao chegar no ponto inicial
+        SetIdle(animSup);
+        supervisor.transform.rotation = inicioSupervisor.rotation;
 
         turnoEmAndamento = false;
         IniciarTurno(2);
@@ -198,91 +222,95 @@ public class TurnosManager : MonoBehaviour
             SetVcamPrioridades(hellyTop: true);
         }
 
-        MoverNPC(agenteHelly, destinoHelly != null ? destinoHelly.position : helly.transform.position);
+        // Idle → Walking
+        GoTo(agenteHelly, destinoHelly != null ? destinoHelly.position : helly.transform.position, animHelly);
         yield return WaitAteChegar(agenteHelly);
 
-        agenteHelly.isStopped = true; animHelly?.SetBool(boolCharging, true);
+        // Walking → Charging
+        SetCharging(animHelly, true);
+
         SetVcamPrioridades(vcamEcoTop: true);
         yield return StartCoroutine(PreencherNivelLado(false, velocidadeCargaPlena));
 
         ShowClock(duracaoRelogioT2);
         yield return WaitRelogioTerminar();
 
-        // volta andando imediatamente
-        animHelly?.SetBool(boolCharging, false);
-        MoverNPC(agenteHelly, posInicialHelly);
+        // Charging → Walking (voltar)
+        SetCharging(animHelly, false);
+        GoTo(agenteHelly, inicioHelly.position, animHelly);
+
         yield return WaitDelayAndChegar(agenteHelly, delayEncerramento);
-        if (agenteHelly != null) agenteHelly.transform.rotation = rotInicialHelly;
+
+        // Walking → Idle ao chegar no ponto inicial
+        SetIdle(animHelly);
+        helly.transform.rotation = inicioHelly.rotation;
 
         turnoEmAndamento = false;
         IniciarTurno(3);
     }
 
     private IEnumerator RotinaTurno3()
-{
+    {
+        // FOV abre 41→63 enquanto caminham
+        if (vcamPrincipal != null) vcamPrincipal.m_Lens.FieldOfView = fovPadrao;
+        fovAbrindo = true; fovAbrirT = 0f;
 
-    // FOV abre 41→63 enquanto caminham
-    if (vcamPrincipal != null) vcamPrincipal.m_Lens.FieldOfView = fovPadrao;
-    fovAbrindo = true; fovAbrirT = 0f;
+        Vector3 destSup = (destinoSupervisor ? destinoSupervisor.position : supervisor.transform.position);
+        Vector3 destHel = (destinoHelly     ? destinoHelly.position     : helly.transform.position);
+        distSupInicial   = (agenteSup   ? Vector3.Distance(agenteSup.transform.position,   destSup) : 0f);
+        distHellyInicial = (agenteHelly ? Vector3.Distance(agenteHelly.transform.position, destHel) : 0f);
 
-    Vector3 destSup = (destinoSupervisor ? destinoSupervisor.position : supervisor.transform.position);
-    Vector3 destHel = (destinoHelly     ? destinoHelly.position     : helly.transform.position);
-    distSupInicial   = (agenteSup   ? Vector3.Distance(agenteSup.transform.position,   destSup) : 0f);
-    distHellyInicial = (agenteHelly ? Vector3.Distance(agenteHelly.transform.position, destHel) : 0f);
+        // Idle → Walking (ambos)
+        if (agenteSup)   GoTo(agenteSup, destSup, animSup);
+        if (agenteHelly) GoTo(agenteHelly, destHel, animHelly);
+        fovDinamicoAtivo = true;
 
-    if (agenteSup)   MoverNPC(agenteSup, destSup);
-    if (agenteHelly) MoverNPC(agenteHelly, destHel);
-    fovDinamicoAtivo = true;
+        if (agenteSup)   yield return WaitAteChegar(agenteSup);
+        if (agenteHelly) yield return WaitAteChegar(agenteHelly);
 
-    if (agenteSup)   yield return WaitAteChegar(agenteSup);
-    if (agenteHelly) yield return WaitAteChegar(agenteHelly);
+        // Walking → Charging
+        SetCharging(animSup,   true);
+        SetCharging(animHelly, true);
+        SetVcamPrioridades(vcamEcoTop: true);
 
-    // entra em "carga" e começa o turno (sem lev as)
-    if (animSup)   animSup.SetBool(boolCharging, true);
-    if (animHelly) animHelly.SetBool(boolCharging, true);
-    SetVcamPrioridades(vcamEcoTop: true);
+        // Competição de cargas durante o relógio
+        ShowClock(duracaoRelogioT3);
+        yield return StartCoroutine(CompetirCargasAlternandoTransferindo(duracaoRelogioT3));
+        yield return WaitRelogioTerminar();
 
+        // Charging → Walking (voltar)
+        SetCharging(animSup,   false);
+        SetCharging(animHelly, false);
+        if (agenteSup)   GoTo(agenteSup, inicioSupervisor.position, animSup);
+        if (agenteHelly) GoTo(agenteHelly, inicioHelly.position, animHelly);
 
+        if (agenteSup)   yield return WaitDelayAndChegar(agenteSup, delayEncerramento);
+        if (agenteHelly) yield return WaitDelayAndChegar(agenteHelly, 0f);
 
-    // alternância roda pelo tempo do relógio
-    yield return StartCoroutine(CompetirCargasAlternandoTransferindo(duracaoRelogioT3));
-    
-    // relógio aparece AGORA e dura o turno todo
-    ShowClock(duracaoRelogioT3);
+        // Walking → Idle
+        if (animSup)   SetIdle(animSup);
+        if (animHelly) SetIdle(animHelly);
+        if (agenteSup)   agenteSup.transform.rotation = inicioSupervisor.rotation;
+        if (agenteHelly) helly.transform.rotation     = inicioHelly.rotation;
 
-    // espera o relógio terminar (caso termine 1 frame depois)
-    yield return WaitRelogioTerminar();
+        turnoEmAndamento = false;
+        fovDinamicoAtivo = false;
+        fovAbrindo = false;
+        if (vcamPrincipal) vcamPrincipal.m_Lens.FieldOfView = fovPadrao;
 
-    // encerra: volta andando
-    if (animSup)   animSup.SetBool(boolCharging, false);
-    if (animHelly) animHelly.SetBool(boolCharging, false);
-    if (agenteSup)   MoverNPC(agenteSup, posInicialSupervisor);
-    if (agenteHelly) MoverNPC(agenteHelly, posInicialHelly);
+        OnFimDeJogo();
+    }
 
-    if (agenteSup)   yield return WaitDelayAndChegar(agenteSup, delayEncerramento);
-    if (agenteHelly) yield return WaitDelayAndChegar(agenteHelly, 0f);
+    // ---------------- Helpers de Movimento / Animação / Câmera ----------------
 
-    if (agenteSup)   agenteSup.transform.rotation = rotInicialSupervisor;
-    if (agenteHelly) agenteHelly.transform.rotation = rotInicialHelly;
-
-    // fim
-    turnoEmAndamento = false;
-    fovDinamicoAtivo = false;
-    fovAbrindo = false;
-    if (vcamPrincipal) vcamPrincipal.m_Lens.FieldOfView = fovPadrao;
-
-    OnFimDeJogo();
-}
-
-
-    // ---------------- Helpers de Movimento / Câmera ----------------
-
-    private void MoverNPC(NavMeshAgent agente, Vector3 destino)
+    private void GoTo(NavMeshAgent agente, Vector3 destino, Animator anim)
     {
         if (agente == null) return;
         agente.isStopped = false;
         agente.ResetPath();
         agente.SetDestination(destino);
+        SetWalking(anim, true);   // Idle → Walking
+        SetCharging(anim, false); // garante que não está em Charging
     }
 
     private IEnumerator WaitAteChegar(NavMeshAgent agente)
@@ -309,6 +337,34 @@ public class TurnosManager : MonoBehaviour
             t += Time.deltaTime;
             yield return null;
         }
+    }
+
+    private void AtualizarWalkingPorVelocidade(NavMeshAgent agente, Animator anim)
+    {
+        if (agente == null || anim == null) return;
+        // Considera movimento real do agente (para blend suave no Animator se quiser)
+        bool andando = !agente.isStopped && agente.velocity.sqrMagnitude > 0.01f;
+        anim.SetBool(boolWalking, andando);
+    }
+
+    private void SetWalking(Animator anim, bool walking)
+    {
+        if (anim == null) return;
+        anim.SetBool(boolWalking, walking);
+    }
+
+    private void SetCharging(Animator anim, bool charging)
+    {
+        if (anim == null) return;
+        anim.SetBool(boolCharging, charging);
+        if (charging) anim.SetBool(boolWalking, false); // força sair de Walking
+    }
+
+    private void SetIdle(Animator anim)
+    {
+        if (anim == null) return;
+        anim.SetBool(boolWalking,  false);
+        anim.SetBool(boolCharging, false);
     }
 
     private void SetVcamPrioridades(bool vcamEcoTop = false, bool supervisorTop = false, bool hellyTop = false)
@@ -377,13 +433,6 @@ public class TurnosManager : MonoBehaviour
         gerenciadorDePeso.nivelDireita = 0f;
         AtualizaUIBaterias();
     }
-    
-    // No T3 não zeramos: garantimos um estado inicial jogável.
-// - Se os dois estiverem quase vazios, dá um baseline (evita "0/0").
-// - Se os dois estiverem lotados, baixa para abrir espaço (evita "1/1" que trava).
-
-
-
 
     private IEnumerator PreencherNivelLado(bool esquerda, float vel)
     {
@@ -409,90 +458,71 @@ public class TurnosManager : MonoBehaviour
         }
     }
 
-
-
-
-private IEnumerator CompetirCargasAlternandoTransferindo(float dur)
-{
-    if (gerenciadorDePeso == null) yield break;
-
-    float t = 0f;
-
-    // bias único 0..1 que representa a "carga total" (um só valor)
-    // esq = bias01, dir = 1 - bias01
-    float bias01 = Mathf.Clamp01(gerenciadorDePeso.nivelEsquerda);
-
-    // começa aleatório: true = SUP domina (vai para 1), false = HELLY domina (vai para 0)
-    bool supDominante = (Random.value > 0.5f);
-    float trocaTimer  = Mathf.Max(0.05f, l3IntervaloTroca);
-
-    // evento simples de imprevisibilidade
-    float eventoTimer = 0f;              // >0 => evento ativo
-    float eventoBoost = 1f;              // multiplicador momentâneo
-    const float eventoChancePorSegundo = 0.18f;
-    const float eventoDur = 0.6f;
-    const float eventoMult = 1.8f;
-
-    while (t < dur)
+    private IEnumerator CompetirCargasAlternandoTransferindo(float dur)
     {
-        float dt = Time.deltaTime;
+        if (gerenciadorDePeso == null) yield break;
 
-        // alterna lado 8↔80 no intervalo fixo
-        trocaTimer -= dt;
-        if (trocaTimer <= 0f)
-        {
-            supDominante = !supDominante;
-            trocaTimer   += Mathf.Max(0.05f, l3IntervaloTroca);
-        }
+        float t = 0f;
 
-        // alvo do bias: 1 (SUP) ou 0 (HELLY)
-        float alvo = supDominante ? 1f : 0f;
+        float bias01 = Mathf.Clamp01(gerenciadorDePeso.nivelEsquerda);
 
-        // imprevisibilidade: às vezes dá um "gás" pro sentido atual
-        if (eventoTimer > 0f)
+        bool supDominante = (Random.value > 0.5f);
+        float trocaTimer  = Mathf.Max(0.05f, l3IntervaloTroca);
+
+        float eventoTimer = 0f;
+        float eventoBoost = 1f;
+        const float eventoChancePorSegundo = 0.18f;
+        const float eventoDur = 0.6f;
+        const float eventoMult = 1.8f;
+
+        while (t < dur)
         {
-            eventoTimer -= dt;
-            if (eventoTimer <= 0f) eventoBoost = 1f;
-        }
-        else
-        {
-            // chance por segundo
-            if (Random.value < eventoChancePorSegundo * dt)
+            float dt = Time.deltaTime;
+
+            trocaTimer -= dt;
+            if (trocaTimer <= 0f)
             {
-                eventoTimer = eventoDur;
-                eventoBoost = eventoMult; // favorece o sentido atual por um tempinho
+                supDominante = !supDominante;
+                trocaTimer   += Mathf.Max(0.05f, l3IntervaloTroca);
             }
+
+            float alvo = supDominante ? 1f : 0f;
+
+            if (eventoTimer > 0f)
+            {
+                eventoTimer -= dt;
+                if (eventoTimer <= 0f) eventoBoost = 1f;
+            }
+            else
+            {
+                if (Random.value < eventoChancePorSegundo * dt)
+                {
+                    eventoTimer = eventoDur;
+                    eventoBoost = eventoMult;
+                }
+            }
+
+            float dir = Mathf.Sign(alvo - bias01);
+            float step = l3ForcaConst * eventoBoost * dt;
+            float jitter = (Random.value * 2f - 1f) * (l3JitterHz * 0.02f) * dt;
+
+            if (Mathf.Abs(alvo - bias01) <= step)
+                bias01 = alvo;
+            else
+                bias01 = Mathf.Clamp01(bias01 + dir * step + jitter);
+
+            if (gerenciadorDePeso.bateriaEsquerda != null)
+                gerenciadorDePeso.bateriaEsquerda.fillLevel = bias01;
+
+            if (gerenciadorDePeso.bateriaDireita != null)
+                gerenciadorDePeso.bateriaDireita.fillLevel = 1f - bias01;
+
+            gerenciadorDePeso.SetNiveis(bias01, 1f - bias01);
+
+            t += dt;
+            yield return null;
         }
-
-        // força para aproximar do alvo (com pequeno jitter pra não ficar robô)
-        float dir = Mathf.Sign(alvo - bias01); // -1, 0 ou +1
-        float step = l3ForcaConst * eventoBoost * dt;
-
-        // jitter com média ~0 (escala baixa)
-        float jitter = (Random.value * 2f - 1f) * (l3JitterHz * 0.02f) * dt;
-
-        // aproxima do alvo
-        if (Mathf.Abs(alvo - bias01) <= step)
-            bias01 = alvo;
-        else
-            bias01 = Mathf.Clamp01(bias01 + dir * step + jitter);
-
-        // 1) Dirige as BATERIAS (o Gerenciador lê isso todo frame em Play)
-        if (gerenciadorDePeso.bateriaEsquerda != null)
-            gerenciadorDePeso.bateriaEsquerda.fillLevel = bias01;
-
-        if (gerenciadorDePeso.bateriaDireita != null)
-            gerenciadorDePeso.bateriaDireita.fillLevel = 1f - bias01;
-
-        // 2) Aplica já neste frame (mesmo valor) para o torque/viés entrar na mecânica
-        gerenciadorDePeso.SetNiveis(bias01, 1f - bias01);
-
-
-        t += dt;
-        yield return null;
     }
-}
-
 
     private void AtualizaUIBaterias()
     {
@@ -511,18 +541,16 @@ private IEnumerator CompetirCargasAlternandoTransferindo(float dur)
     {
         if (vcamPrincipal == null) return;
 
-        // 1) Abertura 41→63 no início do T3
         if (turnoAtual == 3 && fovAbrindo)
         {
             fovAbrirT += Time.deltaTime;
             float k = Mathf.Clamp01(fovAbrirT / Mathf.Max(0.0001f, durAberturaFOV));
             vcamPrincipal.m_Lens.FieldOfView = Mathf.Lerp(fovPadrao, fovZoomOut, k);
 
-            if (k >= 1f) fovAbrindo = false; // terminou abrir
-            else return; // enquanto abre, não fecha
+            if (k >= 1f) fovAbrindo = false;
+            else return;
         }
 
-        // 2) Fechamento 63→41 acontece DEPOIS da abertura, enquanto andam até os pontos finais
         if (!fovDinamicoAtivo || turnoAtual != 3) return;
 
         float progSup = 1f;

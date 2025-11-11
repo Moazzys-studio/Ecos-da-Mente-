@@ -49,6 +49,8 @@ public class PortaController : MonoBehaviour
     private bool fecharAntesDeTrocar = true;
     [SerializeField, Tooltip("Tempo mínimo (s) com o vão vazio antes de destravar a direção.")]
     private float destravaDirecaoDelay = 0.25f;
+    [SerializeField] private CameraSalaVCam cameraVCam; // arraste no inspetor
+
 
     // ----- Estado -----
     private Quaternion qFechada, qAbertaFora, qAbertaDentro, alvoRotacao;
@@ -98,7 +100,6 @@ public class PortaController : MonoBehaviour
 
         BuildCaches();
         AplicarVisibilidade(true); // começa visível
-        Debug.Log($"[PortaController:{name}] START -> VISÍVEL");
     }
 
     private void Update()
@@ -177,6 +178,8 @@ public class PortaController : MonoBehaviour
 
         playerDentroDaSala = dentro;
         bool visivel = !playerDentroDaSala;
+        cameraVCam?.OnEstadoSala(dentro);
+
 
         // Regras determinísticas:
         // - Se vamos ESCONDER (visivel=false) -> aplica após pequeno atraso (delayInvisibilidade)

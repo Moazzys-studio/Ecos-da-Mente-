@@ -204,7 +204,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: 4cf45954302a7e14b9ddfd50678f52da, type: 3}
       propertyPath: m_Name
-      value: PortaReuniao
+      value: Porta
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -228,6 +228,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 4cf45954302a7e14b9ddfd50678f52da, type: 3}
       insertIndex: -1
       addedObject: {fileID: 5211515461798261448}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 4cf45954302a7e14b9ddfd50678f52da, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 712263759508591542}
     - targetCorrespondingSourceObject: {fileID: -8006923710459302309, guid: 4cf45954302a7e14b9ddfd50678f52da, type: 3}
       insertIndex: -1
       addedObject: {fileID: 3036253707440612854}
@@ -412,6 +415,53 @@ MonoBehaviour:
   latchInsideUntilExit: 1
   tagPlayer: Player
   porta: {fileID: 3368094595176619013}
+--- !u!114 &712263759508591542
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2992197886716779213}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: db5d4da4f13e84a469836fc85cd239db, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  vcam: {fileID: 0}
+  tagPlayer: Player
+  pontoFora: {fileID: 0}
+  pontoDentro: {fileID: 0}
+  confirmInsideDepth: 0.2
+  latchInsideUntilExit: 1
+  normalRotX: 0
+  normalFollowOffset: {x: 0, y: 2, z: 11}
+  salaRotX: 20
+  salaFollowOffset: {x: 0, y: 6, z: 11}
+  blendTime: 0.6
+  ease:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
 --- !u!1 &3865975795433015751 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: -8006923710459302309, guid: 4cf45954302a7e14b9ddfd50678f52da, type: 3}

@@ -636,7 +636,7 @@ AnimationClip:
   m_HasMotionFloatCurves: 0
   m_Events:
   - time: 2.5
-    functionName: EventoCamera_IniciarTurno1
+    functionName: AnimationEvent_IniciarTurno
     data: 
     objectReferenceParameter: {fileID: 0}
     floatParameter: 0

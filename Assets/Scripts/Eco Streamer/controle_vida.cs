@@ -2,15 +2,16 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement; 
 
 public class controle_vida : MonoBehaviour
 {
-   [Header("Vidas")]
+    [Header("Vidas")]
     public Image vida1;
     public Image vida2;
     public Image vida3;
 
-    public Sprite vidaAtiva;      
+    public Sprite vidaAtiva;
     public Sprite vidaPerdida;
 
     public float duracaoFade = 0.4f;
@@ -22,10 +23,9 @@ public class controle_vida : MonoBehaviour
 
     [Header("Barra de Confiança (FillAmount)")]
     public Image barraConfianca;
-    public int confiancaMaxima = 20;          // Valor máximo para encher a barra
-    public float velocidadeBarra = 3f;         // Velocidade da animação ao encher
+    public int confiancaMaxima = 20;
+    public float velocidadeBarra = 3f;
     private int confiancaAnterior = -1;
-
 
     void Update()
     {
@@ -41,6 +41,12 @@ public class controle_vida : MonoBehaviour
         {
             confiancaAnterior = Eco_Streamer_Variaveis.ecoStreamer_pontosDEconfianca;
             StartCoroutine(AtualizarBarraDeConfianca());
+        }
+
+        // ---------------- CHECA SE A VIDA ACABOU ----------------
+        if (Eco_Streamer_Variaveis.vida_ecoStreamer <= 0)
+        {
+            SceneManager.LoadScene("Perdeu");
         }
     }
 
@@ -71,7 +77,6 @@ public class controle_vida : MonoBehaviour
 
     IEnumerator TrocarImagemComFade(Image img, Sprite novoSprite)
     {
-        // Fade-out
         for (float t = 0; t < 1; t += Time.deltaTime / duracaoFade)
         {
             img.color = new Color(1, 1, 1, 1 - t);
@@ -81,7 +86,6 @@ public class controle_vida : MonoBehaviour
         img.sprite = novoSprite;
         img.color = new Color(1, 1, 1, 0);
 
-        // Fade-in
         for (float t = 0; t < 1; t += Time.deltaTime / duracaoFade)
         {
             img.color = new Color(1, 1, 1, t);
@@ -104,7 +108,6 @@ public class controle_vida : MonoBehaviour
             yield return new WaitForSeconds(velocidadePiscada);
         }
 
-        // Fade final
         for (float t = 0; t < 1; t += Time.deltaTime / duracaoFade)
         {
             img.color = new Color(1, 1, 1, 1 - t);
@@ -113,7 +116,6 @@ public class controle_vida : MonoBehaviour
 
         img.color = new Color(1, 1, 1, 0);
     }
-
 
     // ---------------------------------------------------------------
     //                SISTEMA DE CONFIANÇA (FILL AMOUNT)

@@ -1,7 +1,3 @@
-// TurnosManager.cs — Versão sem NENHUM código de câmera
-// Fluxo dos turnos, movimento de NPCs, relógio e gerenciamento de "peso/baterias".
-// O NPC (supervisor/helly) começa a andar exatamente 3s após o início do turno.
-
 using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.UI;
@@ -25,15 +21,17 @@ public class TurnosManager : MonoBehaviour
     [SerializeField] private Transform inicioHelly;
 
     [Header("Relógio (UI – Image Filled)")]
-    [Tooltip("Imagem UI com FillAmount (0..1). O pai pode ser ocultado/mostrado junto.")]
     [SerializeField] private Image relogioUI;
     [SerializeField] private float duracaoRelogioT1 = 12f;
     [SerializeField] private float duracaoRelogioT2 = 12f;
     [SerializeField] private float duracaoRelogioT3 = 8f;
 
     [Header("Fluxo de início de turno")]
-    [Tooltip("Se marcado, o turno inicia automaticamente no Start/Update uma única vez.")]
-    [SerializeField] private bool comecarTurno = true;
+    [Tooltip("Se marcado, o primeiro turno pode começar sozinho (sem câmera).")]
+    [SerializeField] private bool comecarTurnoAutomatico = false;
+
+    [Tooltip("Se true, os turnos só começam quando a câmera chamar o evento.")]
+    [SerializeField] private bool iniciarViaEventoDeCamera = true;
 
     [Header("Ajustes de Movimento")]
     [SerializeField] private float velocidadeAgente = 3.5f;
@@ -46,19 +44,13 @@ public class TurnosManager : MonoBehaviour
     [SerializeField] private string boolCharging = "Charging";
 
     [Header("Sistema de Peso/Baterias")]
-    [Tooltip("Gerenciador de níveis esquerdo/direito (UI/estado).")]
     [SerializeField] private GerenciadorDePeso gerenciadorDePeso;
-    [Tooltip("Velocidade para preencher a barra do lado em carga plena.")]
     [SerializeField] private float velocidadeCargaPlena = 0.35f;
 
     [Header("Turno 3 – Competição (alternância)")]
-    [Tooltip("Duração da disputa de cargas no turno 3.")]
     [SerializeField] private float leva3Dur = 10f;
-    [Tooltip("Agitação aleatória por segundo a aplicar no viés.")]
     [SerializeField] private float l3JitterHz = 6f;
-    [Tooltip("Tempo entre trocas de dominância (sup ↔ helly).")]
     [SerializeField] private float l3IntervaloTroca = 0.25f;
-    [Tooltip("Força base de empurrão do viés por segundo.")]
     [SerializeField] private float l3ForcaConst = 1f;
 
     // Componentes
@@ -123,55 +115,93 @@ public class TurnosManager : MonoBehaviour
             gerenciadorDePeso = FindFirstObjectByType<GerenciadorDePeso>();
 
         HideClock();
+
+        // Se não for via evento de câmera e estiver marcado, pode começar sozinho
+        if (comecarTurnoAutomatico && !iniciarViaEventoDeCamera)
+        {
+            IniciarTurnoInterno(1);
+        }
     }
 
     void Update()
     {
-        // Disparo automático do primeiro turno.
-        if (!turnoEmAndamento && comecarTurno)
-        {
-            comecarTurno = false;
-            int prox = (turnoAtual == 0) ? 1
-                     : (turnoAtual == 1) ? 2
-                     : (turnoAtual == 2) ? 3 : 1;
-            IniciarTurno(prox);
-        }
-
         AtualizarRelogio();
         AtualizarWalkingPorVelocidade(agenteSup,   animSup);
         AtualizarWalkingPorVelocidade(agenteHelly, animHelly);
     }
 
-    // ------------------------ Turnos ------------------------
+    // =========================================================
+    //      MÉTODOS PÚBLICOS PARA ANIMATION EVENT DA CÂMERA
+    // =========================================================
 
-    private void IniciarTurno(int turno)
+    // Chame esse no Animation Event da ÚLTIMA animação de câmera do turno 1
+    public void EventoCamera_IniciarTurno1()
+    {
+        IniciarTurnoPorCamera(1);
+    }
+
+    // Chame esse no Animation Event da ÚLTIMA animação de câmera do turno 2
+    public void EventoCamera_IniciarTurno2()
+    {
+        IniciarTurnoPorCamera(2);
+    }
+
+    // Chame esse no Animation Event da ÚLTIMA animação de câmera do turno 3
+    public void EventoCamera_IniciarTurno3()
+    {
+        IniciarTurnoPorCamera(3);
+    }
+
+    public void IniciarTurnoPorCamera(int turno)
+    {
+        if (!iniciarViaEventoDeCamera)
+        {
+            Debug.LogWarning("[TurnosManager] IniciarTurnoPorCamera chamado, mas 'iniciarViaEventoDeCamera' está desmarcado.");
+        }
+
+        if (turnoEmAndamento)
+        {
+            // já tem turno acontecendo, ignora
+            return;
+        }
+
+        IniciarTurnoInterno(turno);
+    }
+
+    // =========================================================
+    //                CONTROLE INTERNO DE TURNOS
+    // =========================================================
+
+    private void IniciarTurnoInterno(int turno)
     {
         if (rotinaTurno != null) StopCoroutine(rotinaTurno);
+
         turnoAtual = turno;
         turnoEmAndamento = true;
 
-        if (turno == 1)
+        switch (turno)
         {
-            rotinaTurno = StartCoroutine(RotinaTurno1());
-        }
-        else if (turno == 2)
-        {
-            rotinaTurno = StartCoroutine(RotinaTurno2());
-        }
-        else // turno 3
-        {
-            rotinaTurno = StartCoroutine(RotinaTurno3());
+            case 1:
+                rotinaTurno = StartCoroutine(RotinaTurno1());
+                break;
+            case 2:
+                rotinaTurno = StartCoroutine(RotinaTurno2());
+                break;
+            case 3:
+            default:
+                rotinaTurno = StartCoroutine(RotinaTurno3());
+                break;
         }
     }
 
     private IEnumerator RotinaTurno1()
     {
+        // aqui a câmera JÁ terminou, porque o Animation Event chamou o turno
         // Movimento do Supervisor 3s após início do turno
         StartCoroutine(AgendarMovimento(agenteSup,
             destinoSupervisor ? destinoSupervisor.position : supervisor.transform.position,
             animSup, 3f));
 
-        // Espera chegar ao destino
         yield return WaitAteChegar(agenteSup);
 
         // Carrega lado esquerdo
@@ -190,29 +220,30 @@ public class TurnosManager : MonoBehaviour
         supervisor.transform.rotation = inicioSupervisor.rotation;
 
         turnoEmAndamento = false;
-        comecarTurno = true;
-        IniciarTurno(2);
+
+        // Se você quiser usar evento de câmera também entre turnos,
+        // NÃO chama o 2 aqui automaticamente. Deixa a câmera decidir.
+        // Se quiser manter auto, descomente:
+        //
+        // if (!iniciarViaEventoDeCamera)
+        //     IniciarTurnoInterno(2);
     }
 
     private IEnumerator RotinaTurno2()
     {
-        // Movimento da Helly 3s após início do turno
+        // Helly anda depois da câmera
         StartCoroutine(AgendarMovimento(agenteHelly,
             destinoHelly ? destinoHelly.position : helly.transform.position,
             animHelly, 3f));
 
-        // Espera chegar ao destino
         yield return WaitAteChegar(agenteHelly);
 
-        // Carrega lado direito
         SetCharging(animHelly, true);
         yield return StartCoroutine(PreencherNivelLado(false, velocidadeCargaPlena));
 
-        // Relógio de tarefa
         ShowClock(duracaoRelogioT2);
         yield return WaitRelogioTerminar();
 
-        // Volta para o início
         SetCharging(animHelly, false);
         GoTo(agenteHelly, inicioHelly.position, animHelly);
         yield return WaitDelayAndChegar(agenteHelly, 0.4f);
@@ -220,8 +251,13 @@ public class TurnosManager : MonoBehaviour
         helly.transform.rotation = inicioHelly.rotation;
 
         turnoEmAndamento = false;
-        comecarTurno = true;
-        IniciarTurno(3);
+
+        // Mesmo esquema do turno 1:
+        // se quiser que o 3 só comece quando a câmera mandar, deixa assim.
+        // Se quiser automático quando terminar o 2 e SEM câmera, descomenta:
+        //
+        // if (!iniciarViaEventoDeCamera)
+        //     IniciarTurnoInterno(3);
     }
 
     private IEnumerator RotinaTurno3()
@@ -237,7 +273,6 @@ public class TurnosManager : MonoBehaviour
         if (agenteSup)   yield return WaitAteChegar(agenteSup);
         if (agenteHelly) yield return WaitAteChegar(agenteHelly);
 
-        // Ambos carregam e disputam
         SetCharging(animSup,   true);
         SetCharging(animHelly, true);
 
@@ -245,7 +280,6 @@ public class TurnosManager : MonoBehaviour
         yield return StartCoroutine(CompetirCargasAlternandoTransferindo(duracaoRelogioT3));
         yield return WaitRelogioTerminar();
 
-        // Encerrar: retornar aos inícios
         SetCharging(animSup,   false);
         SetCharging(animHelly, false);
 
@@ -259,10 +293,9 @@ public class TurnosManager : MonoBehaviour
         if (animHelly) SetIdle(animHelly);
 
         if (agenteSup)   supervisor.transform.rotation = inicioSupervisor.rotation;
-        if (agenteHelly) helly.transform.rotation     = inicioHelly.rotation;
+        if (agenteHelly) helly.transform.rotation      = inicioHelly.rotation;
 
         turnoEmAndamento = false;
-        comecarTurno = true;
 
         OnFimDeJogo();
     }
@@ -517,7 +550,6 @@ public class TurnosManager : MonoBehaviour
 
         turnoEmAndamento = false;
         turnoAtual = 0;
-        comecarTurno = true;
     }
 
     private void OnFimDeJogo()

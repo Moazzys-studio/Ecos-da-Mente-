@@ -53,7 +53,7 @@ public class EcoDigitalController : MonoBehaviour
     private void Awake()
     {
         rb = GetComponent<Rigidbody>();
-        rb.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
+        
 
         if (transformCamera == null && Camera.main != null)
             transformCamera = Camera.main.transform;

@@ -15,24 +15,34 @@ public class EcoDigitalController : MonoBehaviour
     [Tooltip("Velocidade base de deslocamento no plano XZ (m/s).")]
     [SerializeField, Min(0f)] private float velocidadeMovimento = 4.5f;
 
-    [Tooltip("Zona morta radial do analógico (0 = desativado). Recomendado ~0.02.")]
+    [Header("Zona morta / suavização")]
+    [Tooltip("Magnitude mínima do input para começar a considerar movimento.")]
     [SerializeField, Range(0f, 1f)] private float zonaMorta = 0.02f;
 
-    [Tooltip("Histerese para evitar liga/desliga perto da zona morta. Ex.: 0.02.")]
-    [SerializeField, Range(0f, 0.25f)] private float histereseZonaMorta = 0.02f;
+    [Tooltip("Histerese adicional para sair da zona morta (evita flick).")]
+    [SerializeField, Range(0f, 1f)] private float histereseZonaMorta = 0.02f;
 
-    [Tooltip("Reescala o input após a zona morta para transição suave.")]
+    [Tooltip("Se verdadeiro, reescala o input para compensar a zona morta radial.")]
     [SerializeField] private bool compensarZonaMortaRadial = true;
 
-    [Tooltip("Tempo (seg.) do SmoothDamp aplicado ao input; 0 desativa. Ex.: 0.06.")]
+    [Tooltip("Tempo de suavização (SmoothDamp) do input em segundos.")]
     [SerializeField, Range(0f, 0.25f)] private float tempoSuavizacaoInput = 0.06f;
 
     // ===================== VISUAL / ROTAÇÃO =====================
     [Header("Visual / Rotação")]
+    [Tooltip("Transform do modelo visual, usado para girar o Eco. Se vazio, usa o próprio transform.")]
     [SerializeField] private Transform pivoModelo;
+
+    [Tooltip("Offset em graus no Y aplicado à rotação visual (ajuste de modelo).")]
     [SerializeField] private float deslocamentoYawModelo = 0f;
+
+    [Tooltip("Velocidade de interpolação da rotação (quanto maior, mais rápido).")]
     [SerializeField, Range(0f, 40f)] private float interpolacaoGiro = 16f;
+
+    [Tooltip("Limiar mínimo de magnitude da direção para atualizar a rotação.")]
     [SerializeField, Range(0.01f, 0.25f)] private float limiarRotacao = 0.06f;
+
+    [Tooltip("Se verdadeiro, o modelo continua girando mesmo parado.")]
     [SerializeField] private bool girarQuandoParado = false;
 
     // ===================== MESMERIZE =====================
@@ -49,7 +59,15 @@ public class EcoDigitalController : MonoBehaviour
     // ===================== ANIMATOR =====================
     [Header("Animator")]
     [SerializeField] private Animator animator;
+
+    [Tooltip("Parâmetro float que controla o Blend Tree de locomoção normal.")]
     [SerializeField] private string nomeParametroSpeed = "Speed";
+
+    [Tooltip("Parâmetro float usado no Blend Tree do Mesmerize (-1 = esquerda, 0 = idle, 1 = direita).")]
+    [SerializeField] private string nomeParametroStrafe = "Strafe";
+
+    [Tooltip("Parâmetro bool que liga o estado Mesmerizado no Animator.")]
+    [SerializeField] private string nomeParametroMesmerizado = "Mesmerizado";
 
     // ===================== PRIVADOS =====================
     private Rigidbody rb;
@@ -73,49 +91,57 @@ public class EcoDigitalController : MonoBehaviour
     }
 
     // Input System (Action "Move" como Vector2)
-    public void OnMove(InputValue valor) => entradaMovimentoRaw = valor.Get<Vector2>();
+    public void OnMove(InputValue valor)
+    {
+        entradaMovimentoRaw = valor.Get<Vector2>();
+    }
 
     // ===================== API MESMERIZE =====================
     public void AtivarMesmerize(Transform alvo)
     {
         estaMesmerizado = true;
-        alvoMesmerize = alvo;
+        alvoMesmerize   = alvo;
+
+        if (animator != null && !string.IsNullOrEmpty(nomeParametroMesmerizado))
+            animator.SetBool(nomeParametroMesmerizado, true);
     }
 
     public void DesativarMesmerize()
     {
         estaMesmerizado = false;
-        alvoMesmerize = null;
+        alvoMesmerize   = null;
+
+        if (animator != null && !string.IsNullOrEmpty(nomeParametroMesmerizado))
+            animator.SetBool(nomeParametroMesmerizado, false);
+
+        // Garante que o Blend Tree volta pro idle normal
+        if (animator != null && !string.IsNullOrEmpty(nomeParametroStrafe))
+            animator.SetFloat(nomeParametroStrafe, 0f);
     }
 
     private void FixedUpdate()
     {
+        // Ainda respeita o empurrão / knockback
         var gerenciador = FindObjectOfType<GerenciadorAnimacoesEcoDigital>();
         if (gerenciador != null && gerenciador.EstaEmpurrado)
-            return; // bloqueia qualquer movimento
+            return;
 
-        // 1) Filtra DEADZONE com HISTERese para evitar liga/desliga perto do limiar
+        // 1) DEADZONE / HISTERSE
         Vector2 bruto = entradaMovimentoRaw;
-        float mag = bruto.magnitude;
+        float mag     = bruto.magnitude;
 
-        float limiarSair = Mathf.Clamp01(zonaMorta + Mathf.Abs(histereseZonaMorta)); // para "sair" da zona morta
-        float limiarEntrar = Mathf.Clamp01(zonaMorta);                                // para "entrar" (zerar)
+        float limiarEntrar = Mathf.Clamp01(zonaMorta);
+        float limiarSair   = Mathf.Clamp01(zonaMorta + Mathf.Abs(histereseZonaMorta));
 
         if (dentroDaZonaMorta)
         {
-            // Continua zerado até passar do limiarSair
             if (mag > limiarSair)
-            {
                 dentroDaZonaMorta = false;
-            }
         }
         else
         {
-            // Só zera quando cair abaixo do limiarEntrar
             if (mag < limiarEntrar)
-            {
                 dentroDaZonaMorta = true;
-            }
         }
 
         if (dentroDaZonaMorta)
@@ -126,17 +152,17 @@ public class EcoDigitalController : MonoBehaviour
         {
             if (compensarZonaMortaRadial && limiarEntrar > 0f && limiarEntrar < 1f)
             {
-                // Reescalona a magnitude (0..1) mapeando [zonaMorta..1] -> [0..1]
-                float magReesc = Mathf.InverseLerp(limiarEntrar, 1f, Mathf.Clamp(mag, limiarEntrar, 1f));
-                entradaMovimentoFiltrada = magReesc * bruto.normalized;
+                float magClamp = Mathf.Clamp(mag, limiarEntrar, 1f);
+                float magReesc = Mathf.InverseLerp(limiarEntrar, 1f, magClamp);
+                entradaMovimentoFiltrada = bruto.normalized * magReesc;
             }
             else
             {
-                entradaMovimentoFiltrada = bruto; // já normalizamos mais abaixo
+                entradaMovimentoFiltrada = bruto;
             }
         }
 
-        // 2) Suavização do input (remove jitter do stick)
+        // 2) SUAVIZAÇÃO
         if (tempoSuavizacaoInput > 0f)
         {
             entradaMovimentoSuave = Vector2.SmoothDamp(
@@ -153,43 +179,83 @@ public class EcoDigitalController : MonoBehaviour
             entradaMovimentoSuave = entradaMovimentoFiltrada;
         }
 
-        // Garante direção unitária (ou zero)
         Vector2 unit = entradaMovimentoSuave.sqrMagnitude > 1e-6f
             ? entradaMovimentoSuave.normalized
             : Vector2.zero;
 
         float intensidade = Mathf.Clamp01(entradaMovimentoSuave.magnitude);
 
-        // 3) Converte para direção no plano (considerando câmera se for o caso)
+        // 3) DIREÇÃO PLANAR
         Vector3 direcaoPlanar = CalcularDirecaoPlanarNormalizada(unit);
 
         if (direcaoPlanar.sqrMagnitude >= limiarRotacao * limiarRotacao)
             ultimaDirecaoPlanar = direcaoPlanar;
 
-        // 4) Movimento: aplica apenas XZ e preserva Y da física
+        // 4) MOVIMENTO FÍSICO
         Vector3 velocidadeDesejada = direcaoPlanar * (velocidadeMovimento * intensidade);
 
-        #if UNITY_600_OR_NEWER
+#if UNITY_600_OR_NEWER
         Vector3 curVel = rb.linearVelocity;
         rb.linearVelocity = new Vector3(velocidadeDesejada.x, curVel.y, velocidadeDesejada.z);
-        #else
+#else
         Vector3 curVel = rb.velocity;
         rb.velocity = new Vector3(velocidadeDesejada.x, curVel.y, velocidadeDesejada.z);
-        #endif
+#endif
 
-        // 5) Rotação visual
+        // 5) ROTAÇÃO VISUAL (Mesmerize tem prioridade)
         AtualizarRotacaoVisual(direcaoPlanar);
 
-        // 6) Animator
+        // 6) ANIMATOR: SPEED
         if (animator != null && !string.IsNullOrEmpty(nomeParametroSpeed))
             animator.SetFloat(nomeParametroSpeed, velocidadeDesejada.magnitude);
+
+        // 7) ANIMATOR: STRAFE (apenas durante Mesmerize)
+        AtualizarStrafeMesmerize(velocidadeDesejada);
+    }
+
+    private void AtualizarStrafeMesmerize(Vector3 velocidadeDesejada)
+    {
+        if (animator == null || string.IsNullOrEmpty(nomeParametroStrafe))
+            return;
+
+        if (!estaMesmerizado || alvoMesmerize == null)
+        {
+            // Fora do mesmerize, zera o strafe
+            animator.SetFloat(nomeParametroStrafe, 0f);
+            return;
+        }
+
+        // Direção para o outdoor
+        Vector3 dirAlvo = alvoMesmerize.position - transform.position;
+        dirAlvo.y = 0f;
+
+        if (dirAlvo.sqrMagnitude < 0.0001f)
+        {
+            animator.SetFloat(nomeParametroStrafe, 0f);
+            return;
+        }
+
+        dirAlvo.Normalize();
+
+        // Eixo "direita" relativo ao outdoor (cross up x forward)
+        Vector3 direita = Vector3.Cross(Vector3.up, dirAlvo);
+
+        // Componente lateral da velocidade
+        float lateral = Vector3.Dot(velocidadeDesejada, direita);
+
+        // Normaliza pra -1..1 usando a velocidadeMovimento como referência
+        float strafe = 0f;
+        if (velocidadeMovimento > 0.01f)
+            strafe = Mathf.Clamp(lateral / velocidadeMovimento, -1f, 1f);
+
+        animator.SetFloat(nomeParametroStrafe, strafe);
     }
 
     private void AtualizarRotacaoVisual(Vector3 direcaoPlanar)
     {
         if (pivoModelo == null) return;
 
-        // ========== MESMERIZE TEM PRIORIDADE ==========
+        // MESMERIZE: sempre olha para o alvo
         if (estaMesmerizado && alvoMesmerize != null)
         {
             Vector3 dir = alvoMesmerize.position - transform.position;
@@ -197,7 +263,7 @@ public class EcoDigitalController : MonoBehaviour
 
             if (dir.sqrMagnitude > 0.0001f)
             {
-                Quaternion rotBase = Quaternion.LookRotation(dir.normalized, Vector3.up);
+                Quaternion rotBase     = Quaternion.LookRotation(dir.normalized, Vector3.up);
                 Quaternion rotCorrigida = rotBase * Quaternion.Euler(0f, deslocamentoYawModelo, 0f);
 
                 float t = Mathf.Clamp01(velocidadeRotacaoMesmerize * Time.deltaTime);
@@ -205,8 +271,8 @@ public class EcoDigitalController : MonoBehaviour
             }
             return;
         }
-        // ==============================================
 
+        // ROTAÇÃO NORMAL
         Vector3 dirNormal = direcaoPlanar;
         if (dirNormal.sqrMagnitude < limiarRotacao * limiarRotacao)
         {
@@ -215,17 +281,18 @@ public class EcoDigitalController : MonoBehaviour
             if (dirNormal.sqrMagnitude < 1e-6f) return;
         }
 
-        Quaternion rotBaseNormal = Quaternion.LookRotation(dirNormal, Vector3.up);
+        Quaternion rotBaseNormal      = Quaternion.LookRotation(dirNormal, Vector3.up);
         Quaternion rotCorrigidaNormal = rotBaseNormal * Quaternion.Euler(0f, deslocamentoYawModelo, 0f);
 
         if (interpolacaoGiro <= 0f)
+        {
             pivoModelo.rotation = rotCorrigidaNormal;
+        }
         else
-            pivoModelo.rotation = Quaternion.Slerp(
-                pivoModelo.rotation,
-                rotCorrigidaNormal,
-                Mathf.Clamp01(interpolacaoGiro * Time.deltaTime)
-            );
+        {
+            float t = Mathf.Clamp01(interpolacaoGiro * Time.deltaTime);
+            pivoModelo.rotation = Quaternion.Slerp(pivoModelo.rotation, rotCorrigidaNormal, t);
+        }
     }
 
     private Vector3 CalcularDirecaoPlanarNormalizada(Vector2 inputUnitario)

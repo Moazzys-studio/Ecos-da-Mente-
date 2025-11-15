@@ -15,6 +15,8 @@ public class NPCEcoDigital : MonoBehaviour
     [SerializeField] private Animator animator; // opcional
     [Tooltip("Limites opcionais para manter o NPC dentro. Deixe vazio para ignorar.")]
     [SerializeField] private BoxCollider limites;
+    [Tooltip("Referência ao Eco (jogador). Usado no comportamento de bloquear caminho (Conectado).")]
+    [SerializeField] private Transform eco;
 
     [Header("Movimento")]
     [Tooltip("Raio máximo para buscar novos destinos aleatórios.")]
@@ -52,6 +54,37 @@ public class NPCEcoDigital : MonoBehaviour
     [Tooltip("Alcance para considerar mudança de corner.")]
     [SerializeField, Min(0.1f)] private float cornerTolerance = 0.4f;
 
+    // ========== BLOQUEAR CAMINHO DO ECO (perfil Conectado) ==========
+    [Header("Bloquear caminho do Eco (Conectado)")]
+    [Tooltip("Ativar comportamento de atravessar na frente do Eco.")]
+    [SerializeField] private bool tentarBloquearEco = true;
+
+    [Tooltip("Distância máxima para o NPC se preocupar em bloquear o Eco.")]
+    [SerializeField] private float distanciaParaBloqueio = 10f;
+
+    [Tooltip("Offset à frente do Eco onde o NPC tenta chegar (eixo X, side-scroller).")]
+    [SerializeField] private float offsetFrenteEco = 1.5f;
+
+    [Tooltip("Desvio lateral em Z para não ficar sempre na mesma linha.")]
+    [SerializeField] private float desvioLateralMax = 0.5f;
+
+    [Range(0f, 1f)]
+    [Tooltip("Chance de, ao checar o Eco, decidir tentar bloquear.")]
+    [SerializeField] private float chanceDeBloquear = 0.4f;
+
+    [Tooltip("Tempo mínimo entre tentativas de bloqueio (segundos).")]
+    [SerializeField] private float intervaloMinEntreBloqueios = 3f;
+
+    [Tooltip("Tempo máximo entre tentativas de bloqueio (segundos).")]
+    [SerializeField] private float intervaloMaxEntreBloqueios = 7f;
+
+    [Tooltip("Travar o eixo Z do NPC em uma faixa fixa da calçada (side-view).")]
+    [SerializeField] private bool travarZ = true;
+
+    [Tooltip("Valor de Z travado (se 0, usa o Z atual no Start).")]
+    [SerializeField] private float zTravado = 0f;
+    // ================================================================
+
     // ========== ANIM: novos parâmetros opcionais ==========
     [Header("Animator (Parado/Andando por Perfil)")]
     [Tooltip("Nome do parâmetro INT que indica o perfil no Animator (0=Feliz, 1=Conectado).")]
@@ -74,13 +107,13 @@ public class NPCEcoDigital : MonoBehaviour
     private readonly List<Vector3> rotaCorners = new List<Vector3>();
     private int cornerIndex = 0;
 
+    // cooldown para bloqueio do Eco
+    private float proximaTentativaBloqueio = 0f;
+
     // Animator params (existentes)
     private static readonly int HASH_Speed = Animator.StringToHash("Speed");
     private static readonly int HASH_ChecandoCelular = Animator.StringToHash("ChecandoCelular");
     private static readonly int HASH_Olhando = Animator.StringToHash("Olhando");
-
-    // ANIM: caches para evitar StringToHash em todo frame (se o usuário quiser posteriormente)
-    // Aqui mantemos como string para ser editável no Inspector.
 
     void Awake()
     {
@@ -101,6 +134,12 @@ public class NPCEcoDigital : MonoBehaviour
                 break;
         }
 
+        // Se for para travar Z, usa o valor atual como faixa
+        if (travarZ)
+        {
+            zTravado = transform.position.z;
+        }
+
         // Carrega Pontos de Interesse (tag opcional)
         var gos = GameObject.FindGameObjectsWithTag("PontoInteresse");
         foreach (var go in gos) pontosInteresse.Add(go.transform);
@@ -115,6 +154,14 @@ public class NPCEcoDigital : MonoBehaviour
     void Update()
     {
         cronometroEstado += Time.deltaTime;
+
+        // travar Z em side-view
+        if (travarZ)
+        {
+            var pos = transform.position;
+            pos.z = zTravado;
+            transform.position = pos;
+        }
 
         AtualizarAnimator();
 
@@ -176,6 +223,12 @@ public class NPCEcoDigital : MonoBehaviour
                         SetRandomSpeed(0.9f, 1.1f);
                 }
                 break;
+        }
+
+        // Comportamento extra: tentar bloquear o Eco (apenas Conectado)
+        if (perfil == PerfilNPC.Conectado && tentarBloquearEco && eco != null)
+        {
+            AtualizarBloqueioEco();
         }
     }
 
@@ -363,17 +416,24 @@ public class NPCEcoDigital : MonoBehaviour
     }
 
     private void AtualizarAnimator()
-{
-    if (!animator) return;
+    {
+        if (!animator) return;
 
-    float vel = agent.velocity.magnitude;
-    bool andando = vel > 0.05f && !agent.isStopped;
+        float vel = agent.velocity.magnitude;
+        bool andando = vel > 0.05f && !agent.isStopped;
 
-    // Atualiza o parâmetro Andando (idle vs movimento)
-    if (animator.HasParameterOfType("Andando", AnimatorControllerParameterType.Bool))
-        animator.SetBool("Andando", andando);
-}
+        // Atualiza o parâmetro Andando (idle vs movimento)
+        if (animator.HasParameterOfType(nomeParamAndando, AnimatorControllerParameterType.Bool))
+            animator.SetBool(nomeParamAndando, andando);
 
+        // Atualiza flags específicas se você estiver usando (opcional)
+        animator.SetFloat(HASH_Speed, vel);
+
+        bool checando = (estadoAtual == Estado.ChecandoCelular);
+        bool olhando = (estadoAtual == Estado.OlhandoAoRedor);
+        animator.SetBool(HASH_ChecandoCelular, checando);
+        animator.SetBool(HASH_Olhando, olhando);
+    }
 
     // ANIM: helper para setar o INT de perfil no Animator
     private void SetPerfilIndexNoAnimator()
@@ -386,11 +446,56 @@ public class NPCEcoDigital : MonoBehaviour
             animator.SetInteger(nomeParamPerfilIndex, idx);
     }
 
+    // ======= BLOQUEAR ECO (somente perfil Conectado) =======
+    private void AtualizarBloqueioEco()
+    {
+        if (Time.time < proximaTentativaBloqueio)
+            return;
+
+        float dist = Vector3.Distance(transform.position, eco.position);
+        if (dist > distanciaParaBloqueio)
+            return;
+
+        // Chance de realmente bloquear
+        if (Random.value > chanceDeBloquear)
+        {
+            proximaTentativaBloqueio = Time.time + Random.Range(intervaloMinEntreBloqueios, intervaloMaxEntreBloqueios);
+            return;
+        }
+
+        // Ponto à frente do Eco (side-scroller no eixo X)
+        Vector3 alvo = eco.position;
+        alvo.x += offsetFrenteEco;
+
+        if (travarZ)
+        {
+            // mesma faixa de Z do NPC, com leve variação
+            alvo.z = zTravado + Random.Range(-desvioLateralMax, desvioLateralMax);
+        }
+
+        if (TentarProjetarNoNavMesh(alvo, out var projetado))
+        {
+            SetDestino(projetado);
+            proximaTentativaBloqueio = Time.time + Random.Range(intervaloMinEntreBloqueios, intervaloMaxEntreBloqueios);
+        }
+        else
+        {
+            // se não achar navmesh ali, tenta de novo daqui a pouco
+            proximaTentativaBloqueio = Time.time + 2f;
+        }
+    }
+
 #if UNITY_EDITOR
     void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.cyan;
         Gizmos.DrawWireSphere(transform.position, raioBuscaDestino);
+
+        if (perfil == PerfilNPC.Conectado && tentarBloquearEco)
+        {
+            Gizmos.color = Color.yellow;
+            Gizmos.DrawWireSphere(transform.position, distanciaParaBloqueio);
+        }
 
         if (limites)
         {

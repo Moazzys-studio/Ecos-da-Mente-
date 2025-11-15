@@ -35,6 +35,17 @@ public class EcoDigitalController : MonoBehaviour
     [SerializeField, Range(0.01f, 0.25f)] private float limiarRotacao = 0.06f;
     [SerializeField] private bool girarQuandoParado = false;
 
+    // ===================== MESMERIZE =====================
+    [Header("Mesmerize")]
+    [Tooltip("Se verdadeiro, o Eco está sob efeito de Mesmerize (olhando para um outdoor).")]
+    public bool estaMesmerizado = false;
+
+    [Tooltip("Alvo que o Eco deve olhar enquanto mesmerizado (normalmente um Empty na frente do outdoor).")]
+    public Transform alvoMesmerize;
+
+    [Tooltip("Velocidade de rotação para alinhar com o alvo do Mesmerize.")]
+    [SerializeField] private float velocidadeRotacaoMesmerize = 6f;
+
     // ===================== ANIMATOR =====================
     [Header("Animator")]
     [SerializeField] private Animator animator;
@@ -53,7 +64,6 @@ public class EcoDigitalController : MonoBehaviour
     private void Awake()
     {
         rb = GetComponent<Rigidbody>();
-        
 
         if (transformCamera == null && Camera.main != null)
             transformCamera = Camera.main.transform;
@@ -65,11 +75,24 @@ public class EcoDigitalController : MonoBehaviour
     // Input System (Action "Move" como Vector2)
     public void OnMove(InputValue valor) => entradaMovimentoRaw = valor.Get<Vector2>();
 
+    // ===================== API MESMERIZE =====================
+    public void AtivarMesmerize(Transform alvo)
+    {
+        estaMesmerizado = true;
+        alvoMesmerize = alvo;
+    }
+
+    public void DesativarMesmerize()
+    {
+        estaMesmerizado = false;
+        alvoMesmerize = null;
+    }
+
     private void FixedUpdate()
     {
         var gerenciador = FindObjectOfType<GerenciadorAnimacoesEcoDigital>();
         if (gerenciador != null && gerenciador.EstaEmpurrado)
-        return; // bloqueia qualquer movimento
+            return; // bloqueia qualquer movimento
 
         // 1) Filtra DEADZONE com HISTERese para evitar liga/desliga perto do limiar
         Vector2 bruto = entradaMovimentoRaw;
@@ -166,23 +189,41 @@ public class EcoDigitalController : MonoBehaviour
     {
         if (pivoModelo == null) return;
 
-        Vector3 dir = direcaoPlanar;
-        if (dir.sqrMagnitude < limiarRotacao * limiarRotacao)
+        // ========== MESMERIZE TEM PRIORIDADE ==========
+        if (estaMesmerizado && alvoMesmerize != null)
+        {
+            Vector3 dir = alvoMesmerize.position - transform.position;
+            dir.y = 0f;
+
+            if (dir.sqrMagnitude > 0.0001f)
+            {
+                Quaternion rotBase = Quaternion.LookRotation(dir.normalized, Vector3.up);
+                Quaternion rotCorrigida = rotBase * Quaternion.Euler(0f, deslocamentoYawModelo, 0f);
+
+                float t = Mathf.Clamp01(velocidadeRotacaoMesmerize * Time.deltaTime);
+                pivoModelo.rotation = Quaternion.Slerp(pivoModelo.rotation, rotCorrigida, t);
+            }
+            return;
+        }
+        // ==============================================
+
+        Vector3 dirNormal = direcaoPlanar;
+        if (dirNormal.sqrMagnitude < limiarRotacao * limiarRotacao)
         {
             if (!girarQuandoParado) return;
-            dir = ultimaDirecaoPlanar;
-            if (dir.sqrMagnitude < 1e-6f) return;
+            dirNormal = ultimaDirecaoPlanar;
+            if (dirNormal.sqrMagnitude < 1e-6f) return;
         }
 
-        Quaternion rotBase = Quaternion.LookRotation(dir, Vector3.up);
-        Quaternion rotCorrigida = rotBase * Quaternion.Euler(0f, deslocamentoYawModelo, 0f);
+        Quaternion rotBaseNormal = Quaternion.LookRotation(dirNormal, Vector3.up);
+        Quaternion rotCorrigidaNormal = rotBaseNormal * Quaternion.Euler(0f, deslocamentoYawModelo, 0f);
 
         if (interpolacaoGiro <= 0f)
-            pivoModelo.rotation = rotCorrigida;
+            pivoModelo.rotation = rotCorrigidaNormal;
         else
             pivoModelo.rotation = Quaternion.Slerp(
                 pivoModelo.rotation,
-                rotCorrigida,
+                rotCorrigidaNormal,
                 Mathf.Clamp01(interpolacaoGiro * Time.deltaTime)
             );
     }

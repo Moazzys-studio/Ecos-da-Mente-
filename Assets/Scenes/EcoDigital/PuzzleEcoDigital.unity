@@ -153,6 +153,11 @@ Transform:
   m_Children: []
   m_Father: {fileID: 460189978}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!4 &130292410 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 955158008185313384, guid: b0a61409586d19749819a15e256cc37f, type: 3}
+  m_PrefabInstance: {fileID: 1932847339}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &138826698
 GameObject:
   m_ObjectHideFlags: 0
@@ -728,205 +733,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 339525367}
   m_CullTransparentMesh: 1
---- !u!1 &369186660
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 369186662}
-  - component: {fileID: 369186661}
-  - component: {fileID: 369186663}
-  m_Layer: 0
-  m_Name: NarradorManager
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &369186661
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 369186660}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: bad7dd4f9fcb85441a1b977d6a8d7507, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  alvoTMP: {fileID: 795788035}
-  animator: {fileID: 1693258620}
-  animatorLayerIndex: 0
-  iniciarNoInicio: 1
-  stateInicialOverride: 
-  autoStartOnStateEnter: 1
-  reiniciarAoReentrar: 0
-  modoTempo: 1
-  duracaoTotalPadrao: 6
-  caracteresPorSegundo: 10
-  duracaoFadeEntreLinhas: 0.35
-  pausaAposDigitar: 1
-  fazerFadeNaUltimaLinha: 0
-  scriptsPorAnimacao:
-  - stateName: CameraInicial
-    linhas:
-    - "Tantas notifica\xE7\xF5es ao meu redor..."
-    - "Tantas pessoas que eu nem conhe\xE7o."
-    - Tantas coisas acontecendo ao mesmo tempo.
-    - "E mesmo assim, tudo parece t\xE3o distante."
-    - Por que me sinto sozinho no meio de tanta gente?
-    duracaoTotalOverride: 0
-  - stateName: CameraJogo1
-    linhas:
-    - "Vejo sorrisos que parecem t\xE3o reais..."
-    - Vejo vidas perfeitas passando na minha tela.
-    - Cada postagem parece um mundo melhor do que o meu.
-    - "E eu me pergunto se estou ficando para tr\xE1s."
-    - "Ser\xE1 que s\xF3 eu me sinto assim?"
-    duracaoTotalOverride: 0
-  - stateName: CameraJogo3
-    linhas:
-    - Talvez todo mundo se sinta assim em algum momento...
-    - "Talvez ningu\xE9m seja t\xE3o perfeito quanto parece online."
-    - "Mas agora, aqui, me sinto perdido nesse sil\xEAncio digital."
-    - "Como se eu fosse o \xFAnico sem um lugar nesse palco virtual."
-    - "E \xE9 aqui que tudo come\xE7a..."
-    duracaoTotalOverride: 0
-  - stateName: CameraJogo6
-    linhas:
-    - "Cuidado com as notifica\xE7\xF5es"
-    - "Elas s\xE3o gatilhos"
-    - Melhor se esquivar delas
-    - Prepare-se
-    - Agora...
-    duracaoTotalOverride: 0
-  OnNarracaoIniciada:
-    m_PersistentCalls:
-      m_Calls: []
-  OnNarracaoConcluida:
-    m_PersistentCalls:
-      m_Calls: []
-  ecoGameManager: {fileID: 1929319653}
-  stateParaAbrirPainel: CameraJogo3
---- !u!224 &369186662
-RectTransform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 369186660}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 433.79126}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 1173.0321, y: 596.7748}
-  m_SizeDelta: {x: 100, y: 100}
-  m_Pivot: {x: 0.5, y: 0.5}
---- !u!82 &369186663
-AudioSource:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 369186660}
-  m_Enabled: 1
-  serializedVersion: 4
-  OutputAudioMixerGroup: {fileID: 0}
-  m_audioClip: {fileID: 8300000, guid: 540c9ac614edf25409077f0bccd86e9b, type: 3}
-  m_PlayOnAwake: 1
-  m_Volume: 1
-  m_Pitch: 1
-  Loop: 0
-  Mute: 0
-  Spatialize: 0
-  SpatializePostEffects: 0
-  Priority: 128
-  DopplerLevel: 1
-  MinDistance: 1
-  MaxDistance: 500
-  Pan2D: 0
-  rolloffMode: 0
-  BypassEffects: 0
-  BypassListenerEffects: 0
-  BypassReverbZones: 0
-  rolloffCustomCurve:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: 0
-      value: 1
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0.33333334
-      outWeight: 0.33333334
-    - serializedVersion: 3
-      time: 1
-      value: 0
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0.33333334
-      outWeight: 0.33333334
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
-  panLevelCustomCurve:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: 0
-      value: 0
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0.33333334
-      outWeight: 0.33333334
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
-  spreadCustomCurve:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: 0
-      value: 0
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0.33333334
-      outWeight: 0.33333334
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
-  reverbZoneMixCustomCurve:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: 0
-      value: 1
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0.33333334
-      outWeight: 0.33333334
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
 --- !u!1 &410087039
 GameObject:
   m_ObjectHideFlags: 0
@@ -1509,7 +1315,7 @@ RectTransform:
   m_GameObject: {fileID: 795788033}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1.645823, y: 3.4939554, z: 2.0158038}
+  m_LocalScale: {x: 1.2384489, y: 2.6291316, z: 1.516852}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1693955644}
@@ -1755,7 +1561,7 @@ Camera:
     height: 1
   near clip plane: 0.3
   far clip plane: 1000
-  field of view: 60.03705
+  field of view: 43
   orthographic: 0
   orthographic size: 5
   m_Depth: 0
@@ -1781,8 +1587,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 815030999}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -6.3554, y: 1.385, z: -9.87673}
+  m_LocalRotation: {x: 0.639439, y: 0, z: 0, w: 0.7688418}
+  m_LocalPosition: {x: -6.3554, y: 11.217549, z: -1.6990856}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -2306,6 +2112,179 @@ Transform:
   m_Children: []
   m_Father: {fileID: 460189978}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1692545199
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1692545202}
+  - component: {fileID: 1692545201}
+  - component: {fileID: 1692545200}
+  m_Layer: 0
+  m_Name: Narrador
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!82 &1692545200
+AudioSource:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1692545199}
+  m_Enabled: 1
+  serializedVersion: 4
+  OutputAudioMixerGroup: {fileID: 0}
+  m_audioClip: {fileID: 0}
+  m_PlayOnAwake: 1
+  m_Volume: 1
+  m_Pitch: 1
+  Loop: 0
+  Mute: 0
+  Spatialize: 0
+  SpatializePostEffects: 0
+  Priority: 128
+  DopplerLevel: 1
+  MinDistance: 1
+  MaxDistance: 500
+  Pan2D: 0
+  rolloffMode: 0
+  BypassEffects: 0
+  BypassListenerEffects: 0
+  BypassReverbZones: 0
+  rolloffCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 1
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  panLevelCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  spreadCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  reverbZoneMixCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+--- !u!114 &1692545201
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1692545199}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5bf9803669e541e4b8d83e8d34ce271b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  audioSource: {fileID: 1692545200}
+  textoLegenda: {fileID: 795788035}
+  falas:
+  - clip: {fileID: 8300000, guid: c8c777eeacf8d29419303a6176b0f374, type: 3}
+    texto: Eco ?!?!?
+    pausaDepois: 1
+  - clip: {fileID: 8300000, guid: 4a549ed5a392b434fbc323011417ae9b, type: 3}
+    texto: "Onde ser\xE1 que o Eco foi parar ? "
+    pausaDepois: 1
+  - clip: {fileID: 8300000, guid: cfd8bd885f17d984d9055df6daed5104, type: 3}
+    texto: Espero que ele esteja bem
+    pausaDepois: 1
+  - clip: {fileID: 8300000, guid: 146fed3bb458af843906e9f07096fe54, type: 3}
+    texto: "Ele ficou t\xE3o ansioso que... "
+    pausaDepois: 1
+  - clip: {fileID: 8300000, guid: c69e1b4d11fa823498b7a026b6136b3c, type: 3}
+    texto: "Aqui est\xE1 ele !"
+    pausaDepois: 1
+  - clip: {fileID: 8300000, guid: d02fac33e9a54dd459bdad8317e6a98f, type: 3}
+    texto: "Pobre Eco...\n\nPreso por barras invis\xEDveis e digitais."
+    pausaDepois: 1
+  - clip: {fileID: 8300000, guid: 6670d5b2e7a54d34b8ef01257f67959d, type: 3}
+    texto: "Eco Se concentre Eco ! Se n\xE3o voc\xEA vai ficar aqui para sempre "
+    pausaDepois: 2
+  - clip: {fileID: 8300000, guid: 89fc0d2f1d569a5409b0f7ec0225d694, type: 3}
+    texto: "Se ainda n\xE3o percebeu, a li\xE7\xE3o aqui \xE9 desconectar, viver
+      fora disso aqui.  ?!?!?"
+    pausaDepois: 2
+  - clip: {fileID: 8300000, guid: 0e82cb4cf5ee5d244b070cba6b3d698c, type: 3}
+    texto: "Voc\xEA est\xE1 preparado para isso ? "
+    pausaDepois: 1
+  limparLegendaNoFinal: 1
+--- !u!4 &1692545202
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1692545199}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 2.2609446, y: 15.344458, z: -10.469574}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1693258617
 GameObject:
   m_ObjectHideFlags: 0
@@ -2345,7 +2324,7 @@ MonoBehaviour:
   m_LookAt: {fileID: 6803489359391642257}
   m_Follow: {fileID: 6803489359391642257}
   m_Lens:
-    FieldOfView: 60.03705
+    FieldOfView: 43
     OrthographicSize: 5
     NearClipPlane: 0.3
     FarClipPlane: 1000
@@ -2371,14 +2350,15 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1693258617}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -6.3554, y: 1.385, z: -9.87673}
+  m_LocalRotation: {x: 0.639439, y: 0, z: 0, w: 0.7688418}
+  m_LocalPosition: {x: -6.3554, y: 11.217549, z: -1.6990856}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1945288792}
+  - {fileID: 130292410}
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 79.5, y: 0, z: 0}
 --- !u!95 &1693258620
 Animator:
   serializedVersion: 5
@@ -2451,7 +2431,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0, g: 0, b: 0, a: 0}
+  m_Color: {r: 0, g: 0, b: 0, a: 0.59607846}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -2802,6 +2782,63 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+--- !u!1001 &1932847339
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 1693258619}
+    m_Modifications:
+    - target: {fileID: 955158008185313384, guid: b0a61409586d19749819a15e256cc37f, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -2.259964
+      objectReference: {fileID: 0}
+    - target: {fileID: 955158008185313384, guid: b0a61409586d19749819a15e256cc37f, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 8.516053
+      objectReference: {fileID: 0}
+    - target: {fileID: 955158008185313384, guid: b0a61409586d19749819a15e256cc37f, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 11.118055
+      objectReference: {fileID: 0}
+    - target: {fileID: 955158008185313384, guid: b0a61409586d19749819a15e256cc37f, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0.69591284
+      objectReference: {fileID: 0}
+    - target: {fileID: 955158008185313384, guid: b0a61409586d19749819a15e256cc37f, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0.7181263
+      objectReference: {fileID: 0}
+    - target: {fileID: 955158008185313384, guid: b0a61409586d19749819a15e256cc37f, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 955158008185313384, guid: b0a61409586d19749819a15e256cc37f, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 955158008185313384, guid: b0a61409586d19749819a15e256cc37f, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 955158008185313384, guid: b0a61409586d19749819a15e256cc37f, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 955158008185313384, guid: b0a61409586d19749819a15e256cc37f, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3483251303988155323, guid: b0a61409586d19749819a15e256cc37f, type: 3}
+      propertyPath: m_Name
+      value: Desfoque
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: b0a61409586d19749819a15e256cc37f, type: 3}
 --- !u!1 &1940360824
 GameObject:
   m_ObjectHideFlags: 0
@@ -5447,7 +5484,6 @@ SceneRoots:
   - {fileID: 815031004}
   - {fileID: 1889639974}
   - {fileID: 1693258619}
-  - {fileID: 369186662}
   - {fileID: 1929319652}
   - {fileID: 269389952}
   - {fileID: 460189978}
@@ -5457,3 +5493,4 @@ SceneRoots:
   - {fileID: 157008918}
   - {fileID: 1940360828}
   - {fileID: 716979482}
+  - {fileID: 1692545202}

@@ -17,4 +17,7 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/EcoStreamer/StreamerGanhou.unity
     guid: c8686d8f8b484fd4aa3f2f6974572a39
+  - enabled: 1
+    path: Assets/Scenes/Menu.unity
+    guid: c80192bb84cf31e428afeeb37ad8e22f
   m_configObjects: {}

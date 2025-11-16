@@ -14,7 +14,7 @@ public class controle_inimigos : MonoBehaviour
     public List<GameObject> inimigos = new List<GameObject>();
 
     [Header("Texto UI")]
-    public TMP_Text txtQuantidadeInimigos;  // Mostra inimigos + contagem
+    public TMP_Text txtQuantidadeInimigos;
     public TMP_Text txtTempo;
 
     [Header("Configurações")]
@@ -31,16 +31,59 @@ public class controle_inimigos : MonoBehaviour
     {
         AtualizarTexto();
 
+        // Reset das cores iniciais
         foreach (Material mat in materiais)
         {
             if (mat != null)
                 mat.color = corInicial;
         }
+
+        // Verifica imediatamente inimigos inexistentes
+        VerificarInimigoValido();
     }
 
+    // =============================================================
+    // 🔥 Zerar coletável e resetar material do inimigo atual
+    // =============================================================
+    private void ResetarColetavelEAparencia()
+    {
+        Eco_Streamer_Variaveis.ecoStreamer_pontosDEconfianca = 0;
+        progresso = 0f;
+
+        if (indiceAtual < materiais.Count && materiais[indiceAtual] != null)
+            materiais[indiceAtual].color = corInicial;
+    }
+
+    // =============================================================
+    // 🔥 Pula inimigos que já não existem na cena
+    // =============================================================
+    private void VerificarInimigoValido()
+    {
+        while (indiceAtual < inimigos.Count &&
+               inimigos[indiceAtual] == null)
+        {
+            // Marca este inimigo como concluído
+            if (materiais[indiceAtual] != null)
+                materiais[indiceAtual].color = corFinal;
+
+            indiceAtual++;
+            AtualizarTexto();
+
+            // Prepara o próximo inimigo
+            if (indiceAtual < materiais.Count)
+                ResetarColetavelEAparencia();
+        }
+    }
+
+    // =============================================================
+    // ✨ Quando o jogador coleta algo
+    // =============================================================
     public void OnCollectiblePicked()
     {
         Eco_Streamer_Variaveis.ecoStreamer_pontosDEconfianca++;
+
+        // Sempre verificar se o inimigo atual existe
+        VerificarInimigoValido();
 
         if (materiais.Count == 0 || indiceAtual >= materiais.Count)
             return;
@@ -53,21 +96,28 @@ public class controle_inimigos : MonoBehaviour
             matAtual.color = Color.Lerp(corInicial, corFinal, progresso);
         }
 
+        // Quando completar a barra de cor
         if (Eco_Streamer_Variaveis.ecoStreamer_pontosDEconfianca >= pontosParaMudarCor)
         {
             Eco_Streamer_Variaveis.ecoStreamer_pontosDEconfianca = 0;
             progresso = 0f;
 
+            // Destruir inimigo se existir
             if (indiceAtual < inimigos.Count && inimigos[indiceAtual] != null)
             {
                 Destroy(inimigos[indiceAtual], tempoParaDestruir);
             }
 
             indiceAtual++;
-
             AtualizarTexto();
 
-            // Quando concluir TODOS os inimigos
+            // Resetar para o próximo inimigo
+            ResetarColetavelEAparencia();
+
+            // Caso o próximo inimigo também não exista
+            VerificarInimigoValido();
+
+            // Quando acabar todos
             if (indiceAtual >= materiais.Count && !iniciouContagem)
             {
                 iniciouContagem = true;
@@ -76,28 +126,27 @@ public class controle_inimigos : MonoBehaviour
         }
     }
 
+    // =============================================================
+    // UI — texto de inimigos restantes
+    // =============================================================
     private void AtualizarTexto()
     {
         if (txtQuantidadeInimigos != null)
         {
-            int restantes = materiais.Count - indiceAtual;
+            int restantes = Mathf.Max(0, materiais.Count - indiceAtual);
 
             if (restantes > 1)
-            {
                 txtQuantidadeInimigos.text = restantes + " Haters te perseguindo";
-            }
             else if (restantes == 1)
-            {
                 txtQuantidadeInimigos.text = "1 Hater te perseguindo";
-            }
             else
-            {
                 txtQuantidadeInimigos.text = "Nenhum Hater restante!";
-            }
         }
     }
 
-    // CONTAGEM REGRESSIVA NA TELA ⭐
+    // =============================================================
+    // Contagem final para trocar a cena
+    // =============================================================
     private IEnumerator ContagemParaCena()
     {
         int tempo = 3;
@@ -109,7 +158,6 @@ public class controle_inimigos : MonoBehaviour
             tempo--;
         }
 
-        // Troca a cena após 3 segundos
         SceneManager.LoadScene("StreamerGanhou");
     }
 }

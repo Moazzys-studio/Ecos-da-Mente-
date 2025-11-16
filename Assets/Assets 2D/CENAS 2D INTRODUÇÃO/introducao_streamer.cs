@@ -2,10 +2,11 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
+using UnityEngine.SceneManagement;
 
 public class introducao_streamer : MonoBehaviour
 {
-   [Header("Imagens iniciais")]
+  [Header("Imagens iniciais")]
     public GameObject imagem1;
     public GameObject imagem2;
 
@@ -20,6 +21,7 @@ public class introducao_streamer : MonoBehaviour
     [Header("Tempos")]
     public float tempoEntreImagens = 1f;
     public float tempoAnimacao = 3f;
+    public float tempoParaMudarCena = 2f;   // ⬅ delay antes de mudar de cena
 
     [Header("Zoom")]
     public float velocidadeZoom = 0.2f;
@@ -28,6 +30,9 @@ public class introducao_streamer : MonoBehaviour
 
     [Header("Texto na Tela")]
     public TMP_Text textoNarracao;
+
+    [Header("Máquina de escrever")]
+    public static float velocidadeLetra = 0.1f;
 
     void Start()
     {
@@ -42,6 +47,18 @@ public class introducao_streamer : MonoBehaviour
         }
     }
 
+    IEnumerator EscreverTexto(string texto)
+    {
+        textoNarracao.text = "";
+        foreach (char c in texto)
+        {
+            textoNarracao.text += c;
+            yield return new WaitForSeconds(velocidadeLetra);
+        }
+
+        yield return new WaitForSeconds(0.6f); // pausa após o texto terminar
+    }
+
     IEnumerator Sequencia()
     {
         // Desliga tudo no início
@@ -54,45 +71,54 @@ public class introducao_streamer : MonoBehaviour
 
         textoNarracao.text = "";
 
-        // 🔹 IMAGEM 1 — início
+        // 🔹 IMAGEM 1
         imagem1.SetActive(true);
-        textoNarracao.text = 
-            "No início, Eco ainda conseguia criar. Ali, no silêncio do estúdio, ele sentia que finalmente podia respirar — como se o mundo lá fora não existisse.";
+        yield return StartCoroutine(EscreverTexto(
+            "No início, Eco ainda conseguia criar. Ali, no silêncio do estúdio, ele sentia que finalmente podia respirar — como se o mundo lá fora não existisse."
+        ));
         yield return new WaitForSeconds(tempoEntreImagens);
 
-        // 🔹 IMAGEM 2 — ataques começam
+        // 🔹 IMAGEM 2
         imagem2.SetActive(true);
-        textoNarracao.text = 
-            "Mas quando os ataques começaram, algo nele começou a quebrar. Devagar… como uma rachadura que ninguém vê, mas que se espalha por dentro.";
+        yield return StartCoroutine(EscreverTexto(
+            "Mas quando os ataques começaram, algo nele começou a quebrar. Devagar… como uma rachadura que ninguém vê, mas que se espalha por dentro."
+        ));
         yield return new WaitForSeconds(tempoEntreImagens);
 
-        // Desliga imagens
         imagem1.SetActive(false);
         imagem2.SetActive(false);
 
-        // 🔹 ANIMAÇÕES — impacto psicológico
+        // 🔹 ANIMAÇÕES
         animacao1.SetActive(true);
         animacao2.SetActive(true);
-        textoNarracao.text = 
-            "As mensagens não paravam na tela. Elas atravessavam o silêncio, ecoavam por dentro, se distorciam… até virarem pensamentos que ele não conseguia mais calar.";
+        yield return StartCoroutine(EscreverTexto(
+            "As mensagens não paravam na tela. Elas atravessavam o silêncio, ecoavam por dentro, se distorciam… até virarem pensamentos que ele não conseguia mais calar."
+        ));
+
         yield return new WaitForSeconds(tempoAnimacao);
 
         animacao1.SetActive(false);
         animacao2.SetActive(false);
 
-        // 🔹 IMAGEM FINAL 1 — presença emocional
+        // 🔹 IMAGEM FINAL 1
         imagemFinal1.SetActive(true);
-        textoNarracao.text = 
-            "Aos poucos, até o silêncio do estúdio começou a pesar. Cada detalhe — a luz, o espaço, o ar — parecia repetir o que ele leu, como se a própria mente estivesse contra ele.";
+        yield return StartCoroutine(EscreverTexto(
+            "Aos poucos, até o silêncio do estúdio começou a pesar. Cada detalhe — a luz, o espaço, o ar — parecia repetir o que ele leu, como se a própria mente estivesse contra ele."
+        ));
         yield return new WaitForSeconds(tempoEntreImagens);
 
-        // 🔹 IMAGEM FINAL 2 — queda + zoom
+        // 🔹 IMAGEM FINAL 2 + ZOOM
         imagemFinal2.SetActive(true);
-        textoNarracao.text = 
-          "Quando Eco baixa a cabeça, não é só tristeza. É a sensação de ser engolido pelos próprios pensamentos… como se nem descansando ele conseguisse se afastar do que fizeram ele acreditar.";
+        yield return StartCoroutine(EscreverTexto(
+            "Quando Eco baixa a cabeça, não é só tristeza. É a sensação de ser engolido pelos próprios pensamentos… como se nem descansando ele conseguisse se afastar do que fizeram ele acreditar."
+        ));
 
+        // Delay antes do zoom
         yield return new WaitForSeconds(delayZoom);
-
         zoomAtivo = true;
+
+        yield return new WaitForSeconds(tempoParaMudarCena);
+
+        SceneManager.LoadScene("Infinite runner");
     }
 }

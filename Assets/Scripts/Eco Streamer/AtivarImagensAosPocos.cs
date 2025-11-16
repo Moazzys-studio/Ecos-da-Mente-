@@ -12,9 +12,6 @@ public class AtivarImagensAosPocos : MonoBehaviour
     [Header("Configuração")]
     public float tempoEntreAtivacoes = 0.5f;
 
-    [Header("Tempo antes de trocar a cena")]
-    public float tempoAntesDeTrocarScene = 2f;
-
     void Start()
     {
         StartCoroutine(AtivarImagens());
@@ -27,10 +24,5 @@ public class AtivarImagensAosPocos : MonoBehaviour
             img.SetActive(true);
             yield return new WaitForSeconds(tempoEntreAtivacoes);
         }
-
-        // Espera X segundos antes de trocar de cena
-        yield return new WaitForSeconds(tempoAntesDeTrocarScene);
-
-        SceneManager.LoadScene("Infinite runner");
     }
 }

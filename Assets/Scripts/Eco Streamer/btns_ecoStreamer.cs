@@ -1,0 +1,23 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.SceneManagement;
+
+public class btns_ecoStreamer : MonoBehaviour
+{
+    public void tentar()
+    {
+      Eco_Streamer_Variaveis.vida_ecoStreamer = 3;
+      Eco_Streamer_Variaveis.ecoStreamer_pontosDEconfianca = 0;
+      Eco_Streamer_Variaveis.ecoStreamer_inimigos = 3;
+      SceneManager.LoadScene("Infinite runner");
+    }
+    
+    public void sair()
+    {
+      Eco_Streamer_Variaveis.vida_ecoStreamer = 3;
+      Eco_Streamer_Variaveis.ecoStreamer_pontosDEconfianca = 0;
+      Eco_Streamer_Variaveis.ecoStreamer_inimigos = 3;
+      SceneManager.LoadScene("Menu");
+    }
+}

@@ -17,6 +17,7 @@ public class GestorGatilhosEcoDigital : MonoBehaviour
 {
     [Header("UI")]
     [Tooltip("Slider que representa a ansiedade (min=0, max=1).")]
+    [SerializeField] private GerenciadorAnimacoesEcoDigital gerenciadorAnimacoes;
     [SerializeField] private Slider sliderAnsiedade;
 
     [Tooltip("Imagem do handle do slider (emoji/cabecinha ansiosa).")]
@@ -48,6 +49,8 @@ public class GestorGatilhosEcoDigital : MonoBehaviour
 
     [Tooltip("Quanto de ansiedade DIMINUI POR SEGUNDO em Zona de Conforto.")]
     [SerializeField] private float ansiedadePorSegundoConforto = 6f;
+
+    
 
     [Header("Zonas de Conforto x Sistema de Mensagens")]
     [Tooltip("Se verdadeiro, ao entrar em QUALQUER zona de conforto o sistema de mensagens é pausado, e retomado ao sair de todas.")]
@@ -152,18 +155,24 @@ public class GestorGatilhosEcoDigital : MonoBehaviour
     // ================= LÓGICA PRINCIPAL =================
 
     private void ModificarAnsiedade(float delta)
+{
+    if (jaDerrotou) return;
+
+    ansiedadeAtual += delta;
+    ansiedadeAtual = Mathf.Clamp(ansiedadeAtual, 0f, ansiedadeMax);
+
+    // >>>>>>> ADICIONA ISSO <<<<<<<
+    if (gerenciadorAnimacoes != null)
+        gerenciadorAnimacoes.AtualizarAnsiedade(ansiedadeAtual);
+    // >>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+    if (AnsiedadeChegouNoMaximo())
     {
-        if (jaDerrotou) return;
-
-        ansiedadeAtual += delta;
-        ansiedadeAtual = Mathf.Clamp(ansiedadeAtual, 0f, ansiedadeMax);
-
-        if (AnsiedadeChegouNoMaximo())
-        {
-            ansiedadeAtual = ansiedadeMax;
-            DispararDerrota();
-        }
+        ansiedadeAtual = ansiedadeMax;
+        DispararDerrota();
     }
+}
+
 
     private bool AnsiedadeChegouNoMaximo()
     {
@@ -211,6 +220,24 @@ public class GestorGatilhosEcoDigital : MonoBehaviour
         {
             Debug.LogWarning("[GestorGatilhosEcoDigital] Nome da cena de derrota não definido.");
         }
+    }
+
+    public void AdicionarAnsiedade(float delta)
+    {
+        ansiedadeAtual = Mathf.Clamp(ansiedadeAtual + delta, 0f, 100f);
+
+        // Atualiza UI
+        if (sliderAnsiedade != null)
+            sliderAnsiedade.value = ansiedadeAtual;
+
+        // MUITO IMPORTANTE: avisar o Animator
+        if (gerenciadorAnimacoes != null)
+            gerenciadorAnimacoes.AtualizarAnsiedade(ansiedadeAtual);
+    }
+
+    public void ReduzirAnsiedade(float delta)
+    {
+        AdicionarAnsiedade(-delta);
     }
 
     // ================= API PÚBLICA PARA GATILHOS =================

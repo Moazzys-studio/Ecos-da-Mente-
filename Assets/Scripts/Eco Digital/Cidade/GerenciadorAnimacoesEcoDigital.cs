@@ -6,7 +6,7 @@ using UnityEngine.InputSystem; // opcional, apenas se usar PlayerInput
 public class GerenciadorAnimacoesEcoDigital : MonoBehaviour
 {
     [Header("Referências")]
-    [Tooltip("Animator do personagem (deve conter os parâmetros below).")]
+    [Tooltip("Animator do personagem (deve conter os parâmetros abaixo).")]
     [SerializeField] private Animator animator;
 
     [Tooltip("Sistema de mensagens simples que dispara evento C# ao receber notificação.")]
@@ -18,10 +18,20 @@ public class GerenciadorAnimacoesEcoDigital : MonoBehaviour
     [Tooltip("Opcional: PlayerInput para bloquear input enquanto empurrado.")]
     [SerializeField] private PlayerInput playerInput;
 
-    [Header("Parâmetros do Animator")]
+    [Header("Parâmetros do Animator - Locomoção / Estado")]
     [Tooltip("Nome do parâmetro float que representa a velocidade (ex.: 'Speed').")]
     [SerializeField] private string nomeParamVelocidade = "Speed";
 
+    [Tooltip("Parâmetro bool que indica se está correndo (sprint).")]
+    [SerializeField] private string nomeParamCorrendo = "Correndo";
+
+    [Tooltip("Parâmetro float usado no Blend Tree do Mesmerize (-1 = esquerda, 0 = idle, 1 = direita).")]
+    [SerializeField] private string nomeParamStrafe = "Strafe";
+
+    [Tooltip("Parâmetro bool que liga o estado Mesmerizado no Animator.")]
+    [SerializeField] private string nomeParamMesmerizado = "Mesmerizado";
+
+    [Header("Parâmetros do Animator - Notificações / Empurrado")]
     [Tooltip("Trigger para entrar na animação 'ParadoDigitando'.")]
     [SerializeField] private string triggerParadoDigitando = "ParadoDigitando";
 
@@ -34,6 +44,13 @@ public class GerenciadorAnimacoesEcoDigital : MonoBehaviour
     [Header("Detecção de Movimento")]
     [Tooltip("A partir de qual valor de 'Speed' consideramos 'andando'.")]
     [SerializeField, Min(0f)] private float limiarAndando = 0.05f;
+
+    [Header("Ansiedade")]
+    [Tooltip("Nome do parâmetro bool que indica se o Eco está em alta ansiedade (liga Sub-State de ansiedade alta).")]
+    [SerializeField] private string nomeParamAltaAnsiedade = "AltaAnsiedade";
+
+    [Tooltip("Valor de ansiedade (0–100) a partir do qual consideramos 'alta ansiedade'.")]
+    [SerializeField, Range(0f, 100f)] private float limiarAltaAnsiedade = 60f;
 
     [Header("Prioridade Empurrado / Fila de Notificações")]
     [Tooltip("Triggers que NÃO devem disparar enquanto empurrado (serão enfileirados).")]
@@ -108,6 +125,102 @@ public class GerenciadorAnimacoesEcoDigital : MonoBehaviour
         }
     }
 
+    // ===================== LOCOMOÇÃO / MESMERIZE (API PÚBLICA) =====================
+
+    /// <summary>
+    /// Atualiza o parâmetro de velocidade usado no Blend Tree (walk / run)
+    /// e o bool de corrida (sprint).
+    /// </summary>
+    public void AtualizarLocomocao(float velocidadePlanar, bool correndo)
+    {
+        if (!animator) return;
+
+        if (!string.IsNullOrEmpty(nomeParamVelocidade))
+            animator.SetFloat(nomeParamVelocidade, velocidadePlanar);
+
+        if (!string.IsNullOrEmpty(nomeParamCorrendo))
+        {
+            bool estadoCorrendo = correndo && velocidadePlanar > limiarAndando;
+            animator.SetBool(nomeParamCorrendo, estadoCorrendo);
+        }
+    }
+
+    /// <summary>
+    /// Liga/desliga o estado de Mesmerize no Animator.
+    /// </summary>
+    public void DefinirMesmerizado(bool ativo)
+    {
+        if (!animator || string.IsNullOrEmpty(nomeParamMesmerizado)) return;
+
+        animator.SetBool(nomeParamMesmerizado, ativo);
+
+        // Ao sair do mesmerize, garantimos que o strafe volta para 0.
+        if (!ativo && !string.IsNullOrEmpty(nomeParamStrafe))
+        {
+            animator.SetFloat(nomeParamStrafe, 0f);
+        }
+    }
+
+    /// <summary>
+    /// Atualiza o Strafe do Mesmerize (-1 = esquerda, 0 = parado, 1 = direita).
+    /// Lógica baseada na velocidade lateral em relação ao outdoor.
+    /// </summary>
+    public void AtualizarStrafeMesmerize(
+        Vector3 velocidadeDesejada,
+        bool estaMesmerizado,
+        Transform alvoMesmerize,
+        Vector3 posicaoEco,
+        float velocidadeMovimentoBase)
+    {
+        if (!animator || string.IsNullOrEmpty(nomeParamStrafe))
+            return;
+
+        if (!estaMesmerizado || alvoMesmerize == null)
+        {
+            animator.SetFloat(nomeParamStrafe, 0f);
+            return;
+        }
+
+        // Direção para o outdoor
+        Vector3 dirAlvo = alvoMesmerize.position - posicaoEco;
+        dirAlvo.y = 0f;
+
+        if (dirAlvo.sqrMagnitude < 0.0001f)
+        {
+            animator.SetFloat(nomeParamStrafe, 0f);
+            return;
+        }
+
+        dirAlvo.Normalize();
+
+        // Eixo "direita" relativo ao outdoor (cross up x forward)
+        Vector3 direita = Vector3.Cross(Vector3.up, dirAlvo);
+
+        // Componente lateral da velocidade
+        float lateral = Vector3.Dot(velocidadeDesejada, direita);
+
+        // Normaliza pra -1..1 usando a velocidade base de caminhada como referência
+        float strafe = 0f;
+        if (velocidadeMovimentoBase > 0.01f)
+            strafe = Mathf.Clamp(lateral / velocidadeMovimentoBase, -1f, 1f);
+
+        animator.SetFloat(nomeParamStrafe, strafe);
+    }
+
+    /// <summary>
+    /// Atualiza o parâmetro de ansiedade no Animator (bool AltaAnsiedade),
+    /// usado para trocar entre Sub-States de baixa e alta ansiedade.
+    /// </summary>
+    /// <param name="valor0a100">Valor de ansiedade em escala 0–100.</param>
+    public void AtualizarAnsiedade(float valor0a100)
+    {
+        if (!animator || string.IsNullOrEmpty(nomeParamAltaAnsiedade))
+            return;
+
+        bool alta = valor0a100 > limiarAltaAnsiedade;
+        animator.SetBool(nomeParamAltaAnsiedade, alta);
+    }
+
     // ===================== BLOQUEIO DE TRIGGERS (PRIORIDADE) =====================
 
     /// Use internamente em vez de animator.SetTrigger.
@@ -140,8 +253,6 @@ public class GerenciadorAnimacoesEcoDigital : MonoBehaviour
     {
         if (!animator) return;
 
-        // Se está empurrado, apenas enfileiramos o trigger apropriado e saímos
-        // (o enfileiramento acontece dentro do SafeSetTrigger).
         float speed = 0f;
         if (!string.IsNullOrEmpty(nomeParamVelocidade) &&
             animator.HasParameterOfType(nomeParamVelocidade, AnimatorControllerParameterType.Float))

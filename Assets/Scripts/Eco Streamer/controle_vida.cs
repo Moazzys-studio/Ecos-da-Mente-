@@ -46,7 +46,7 @@ public class controle_vida : MonoBehaviour
         // ---------------- CHECA SE A VIDA ACABOU ----------------
         if (Eco_Streamer_Variaveis.vida_ecoStreamer <= 0)
         {
-            SceneManager.LoadScene("Perdeu");
+            SceneManager.LoadScene("StreamerPerdeu");
         }
     }
 

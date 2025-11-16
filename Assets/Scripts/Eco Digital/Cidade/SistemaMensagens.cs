@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using UnityEngine;
+using TMPro;
 
 /// <summary>
 /// Sistema de mensagens do Eco Digital.

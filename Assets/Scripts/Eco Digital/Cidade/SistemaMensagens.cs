@@ -7,7 +7,7 @@ using System;
 [DisallowMultipleComponent]
 public class SistemaMensagens : MonoBehaviour
 {
-    [Header("Geração automática")]
+     [Header("Geração automática")]
     [Tooltip("Se verdadeiro, recebe 1 notificação a cada 'intervaloSegundos'.")]
     [SerializeField] private bool iniciarAutomatico = true;
 
@@ -33,18 +33,27 @@ public class SistemaMensagens : MonoBehaviour
 
     [Tooltip("Quanto tempo (s) o painel 'recebida' fica visível após cada chegada.")]
     [SerializeField, Min(0.1f)] private float tempoExibicaoRecebida = 1.5f;
+
     public event Action<int> NotificacaoRecebida;
 
 
+    // =================== ANIMAÇÃO ====================
+    [Header("Animação")]
+    [Tooltip("Animator da imagem de notificação recebida.")]
+    [SerializeField] private Animator animRecebida;
+
+    [Tooltip("Trigger usado para tocar a animação.")]
+    [SerializeField] private string triggerAnim = "Play";
+
     // ----- Estado -----
     private int naoLidas = 0;
-    private Coroutine coLoop;          // loop de chegada
-    private bool timerAtivo = false;   // controla o temporizador do painel "recebida"
-    private int versaoExibicao = 0;    // truque para reiniciar o timer sem empilhar coroutines
+    private Coroutine coLoop;
+    private bool timerAtivo = false;
+    private int versaoExibicao = 0;
 
     private void Awake()
     {
-        naoLidas = 0; // sempre começa do zero
+        naoLidas = 0;
     }
 
     private void Start()
@@ -65,14 +74,12 @@ public class SistemaMensagens : MonoBehaviour
 
     // ================= API =================
 
-    /// Inicia o recebimento: 1 notificação a cada 'intervaloSegundos'.
     public void IniciarMensagensAutomaticas()
     {
         PararMensagensAutomaticas();
         coLoop = StartCoroutine(CoLoopRecebimento());
     }
 
-    /// Para o recebimento automático.
     public void PararMensagensAutomaticas()
     {
         if (coLoop != null)
@@ -82,24 +89,31 @@ public class SistemaMensagens : MonoBehaviour
         }
     }
 
-    /// Dispara MANUALMENTE uma notificação (soma +1 nas não lidas).
     public void ReceberNotificacao()
     {
-        // 1) soma +1 nas não lidas
+        // 1) Soma +1 nas não lidas
         naoLidas++;
         AtualizarTextoNaoLidas();
 
-        // 2) mostra "Notificação recebida"
+        // 2) Mostra painel "Notificação recebida"
         if (painelRecebida) painelRecebida.SetActive(true);
         if (textoRecebida) textoRecebida.text = "1 Notificação recebida";
 
-        // 3) reinicia o timer de exibição SEM empilhar coroutines
-        versaoExibicao++; // invalida timers antigos
+        // 3) TOCAR A ANIMAÇÃO
+        if (animRecebida)
+        {
+            animRecebida.ResetTrigger(triggerAnim);
+            animRecebida.Play(0, 0, 0);
+            animRecebida.SetTrigger(triggerAnim);
+        }
+
+        // 4) Reinicia o timer de exibição
+        versaoExibicao++;
         if (!timerAtivo) StartCoroutine(CoOcultarRecebidaDepois(versaoExibicao));
+
         NotificacaoRecebida?.Invoke(naoLidas);
     }
 
-    /// Zera o contador (opcional).
     public void MarcarTodasComoLidas()
     {
         naoLidas = 0;
@@ -115,9 +129,9 @@ public class SistemaMensagens : MonoBehaviour
         while (true)
         {
             if (usarTimeScale) yield return new WaitForSeconds(intervaloSegundos);
-            else               yield return new WaitForSecondsRealtime(intervaloSegundos);
+            else yield return new WaitForSecondsRealtime(intervaloSegundos);
 
-            ReceberNotificacao(); // soma +1 e mostra painel
+            ReceberNotificacao();
         }
     }
 
@@ -126,9 +140,8 @@ public class SistemaMensagens : MonoBehaviour
         timerAtivo = true;
 
         if (usarTimeScale) yield return new WaitForSeconds(tempoExibicaoRecebida);
-        else               yield return new WaitForSecondsRealtime(tempoExibicaoRecebida);
+        else yield return new WaitForSecondsRealtime(tempoExibicaoRecebida);
 
-        // Só oculta se ninguém reiniciou o timer nesse meio tempo
         if (versaoLocal == versaoExibicao && painelRecebida)
             painelRecebida.SetActive(false);
 
@@ -142,10 +155,10 @@ public class SistemaMensagens : MonoBehaviour
         if (!textoNaoLidas) return;
 
         if (naoLidas == 0)
-            textoNaoLidas.text = "Sem notificações não lidas";
+            textoNaoLidas.text = "Sem notificações";
         else if (naoLidas == 1)
-            textoNaoLidas.text = "1 notificação não lida";
+            textoNaoLidas.text = "1 Notificação pendente";
         else
-            textoNaoLidas.text = $"{naoLidas} notificações não lidas";
+            textoNaoLidas.text = $"{naoLidas} notificações pendentes";
     }
 }

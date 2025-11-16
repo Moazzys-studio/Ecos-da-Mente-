@@ -9,6 +9,9 @@ EditorBuildSettings:
     path: Assets/Scenes/EcoStreamer/Infinite runner.unity
     guid: dc51bc07c12f2b54b8b55ca6c41e3aa3
   - enabled: 1
-    path: Assets/Scenes/EcoStreamer/Perdeu.unity
+    path: Assets/Scenes/EcoStreamer/StreamerPerdeu.unity
     guid: dcd4370a082fb9d4387f3da2484dea5b
+  - enabled: 1
+    path: Assets/Scenes/EcoStreamer/StreamerGanhou.unity
+    guid: c8686d8f8b484fd4aa3f2f6974572a39
   m_configObjects: {}

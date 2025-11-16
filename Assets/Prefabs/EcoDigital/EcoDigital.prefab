@@ -607,9 +607,6 @@ PrefabInstance:
       addedObject: {fileID: 1358317853903257698}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: aac07904c356dc745a007228a8921d21, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 1008337398259330760}
-    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: aac07904c356dc745a007228a8921d21, type: 3}
-      insertIndex: -1
       addedObject: {fileID: 944648769956328903}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: aac07904c356dc745a007228a8921d21, type: 3}
       insertIndex: -1
@@ -626,6 +623,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: aac07904c356dc745a007228a8921d21, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1256619655614709186}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: aac07904c356dc745a007228a8921d21, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2342557307093855279}
   m_SourcePrefab: {fileID: 100100000, guid: aac07904c356dc745a007228a8921d21, type: 3}
 --- !u!4 &2327576781836144991 stripped
 Transform:
@@ -658,29 +658,6 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
---- !u!136 &1008337398259330760
-CapsuleCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3100418748754562021}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Radius: 0.22
-  m_Height: 1.36
-  m_Direction: 1
-  m_Center: {x: 0, y: 0.65, z: 0}
 --- !u!54 &944648769956328903
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -732,8 +709,13 @@ MonoBehaviour:
   interpolacaoGiro: 5
   limiarRotacao: 0.06
   girarQuandoParado: 0
+  estaMesmerizado: 0
+  alvoMesmerize: {fileID: 0}
+  velocidadeRotacaoMesmerize: 6
   animator: {fileID: 1358317853903257698}
   nomeParametroSpeed: Speed
+  nomeParametroStrafe: Strafe
+  nomeParametroMesmerizado: Mesmerizado
 --- !u!114 &4280068314967778804
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -841,3 +823,24 @@ MonoBehaviour:
   pistaRotX: 30
   tempoTransicao: 1
   atrasoVoltarNormal: 4
+--- !u!65 &2342557307093855279
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3100418748754562021}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.6011925, y: 1.5709773, z: 0.44839478}
+  m_Center: {x: -0.018966675, y: 0.8168568, z: 0.10897875}

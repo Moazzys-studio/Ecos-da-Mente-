@@ -2,13 +2,18 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
+
 public class AtivarImagensAosPocos : MonoBehaviour
 {
-    [Header("Imagens que serão ativadas")]
-    public List<GameObject> imagens; 
+   [Header("Imagens que serão ativadas")]
+    public List<GameObject> imagens;
 
     [Header("Configuração")]
     public float tempoEntreAtivacoes = 0.5f;
+
+    [Header("Tempo antes de trocar a cena")]
+    public float tempoAntesDeTrocarScene = 2f;
 
     void Start()
     {
@@ -19,8 +24,13 @@ public class AtivarImagensAosPocos : MonoBehaviour
     {
         foreach (GameObject img in imagens)
         {
-            img.SetActive(true);  
+            img.SetActive(true);
             yield return new WaitForSeconds(tempoEntreAtivacoes);
         }
+
+        // Espera X segundos antes de trocar de cena
+        yield return new WaitForSeconds(tempoAntesDeTrocarScene);
+
+        SceneManager.LoadScene("Infinite runner");
     }
 }

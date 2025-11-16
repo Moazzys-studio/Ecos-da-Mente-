@@ -29,16 +29,35 @@ public class GrupoDaltonismoUI_Slider : MonoBehaviour
 
     private void Awake()
     {
+        //-------------------------------
+        // Proteções extras (Unity 2022)
+        //-------------------------------
+        if (!sliderModo || !sliderIntensidade)
+        {
+            Debug.LogError("[GrupoDaltonismoUI] Sliders não atribuídos!");
+            enabled = false;
+            return;
+        }
+        if (!chaveAtivar)
+        {
+            Debug.LogError("[GrupoDaltonismoUI] ChaveAtivar não atribuída!");
+            enabled = false;
+            return;
+        }
+
         carregando = true;
 
         int ativo = PlayerPrefs.GetInt(KEY_ATIVO, 0);
         int modo  = Mathf.Clamp(PlayerPrefs.GetInt(KEY_MODO, 0), 0, 5);
         float intensidade = Mathf.Clamp01(PlayerPrefs.GetFloat(KEY_INT, 1f));
 
-        sliderModo.minValue = 0; sliderModo.maxValue = 5; sliderModo.wholeNumbers = true;
+        sliderModo.minValue = 0;
+        sliderModo.maxValue = 5;
+        sliderModo.wholeNumbers = true;
         sliderModo.SetValueWithoutNotify(modo);
 
-        sliderIntensidade.minValue = 0; sliderIntensidade.maxValue = 1;
+        sliderIntensidade.minValue = 0;
+        sliderIntensidade.maxValue = 1;
         sliderIntensidade.SetValueWithoutNotify(intensidade);
 
         chaveAtivar.Definir(ativo == 1, false, true);
@@ -47,8 +66,14 @@ public class GrupoDaltonismoUI_Slider : MonoBehaviour
         AplicarModo(modo, ativo == 1);
         AplicarIntensidade(intensidade);
 
+        // Unity 2022 exige remover e adicionar com segurança
+        sliderModo.onValueChanged.RemoveAllListeners();
         sliderModo.onValueChanged.AddListener(OnSliderModo);
+
+        sliderIntensidade.onValueChanged.RemoveAllListeners();
         sliderIntensidade.onValueChanged.AddListener(OnIntensidade);
+
+        chaveAtivar.aoMudar.RemoveAllListeners();
         chaveAtivar.aoMudar.AddListener(OnChave);
 
         carregando = false;
@@ -56,11 +81,15 @@ public class GrupoDaltonismoUI_Slider : MonoBehaviour
 
     private void OnDestroy()
     {
-        sliderModo.onValueChanged.RemoveListener(OnSliderModo);
-        sliderIntensidade.onValueChanged.RemoveListener(OnIntensidade);
-        chaveAtivar.aoMudar.RemoveListener(OnChave);
+        // Segurança para evitar callbacks quebrados
+        if (sliderModo) sliderModo.onValueChanged.RemoveListener(OnSliderModo);
+        if (sliderIntensidade) sliderIntensidade.onValueChanged.RemoveListener(OnIntensidade);
+        if (chaveAtivar) chaveAtivar.aoMudar.RemoveListener(OnChave);
     }
 
+    //---------------------------------------------
+    // EVENTOS
+    //---------------------------------------------
     private void OnSliderModo(float valor)
     {
         int modo = Mathf.RoundToInt(valor);
@@ -99,10 +128,15 @@ public class GrupoDaltonismoUI_Slider : MonoBehaviour
         Salvar();
     }
 
+    //---------------------------------------------
+    // APLICAÇÕES DE VALORES
+    //---------------------------------------------
     private void AtualizarTexto(int modo)
     {
         modo = Mathf.Clamp(modo, 0, nomesModos.Length - 1);
-        if (textoModo) textoModo.text = nomesModos[modo];
+
+        if (textoModo != null)
+            textoModo.text = nomesModos[modo];
     }
 
     private void AplicarModo(int modoIndex, bool ativo)
@@ -111,8 +145,8 @@ public class GrupoDaltonismoUI_Slider : MonoBehaviour
 
         if (!ativo)
         {
-            daltonismoFeature.SetModoUI(0);     // Nenhum
-            daltonismoFeature.ApplyParamsNow(); // força update
+            daltonismoFeature.SetModoUI(0);
+            daltonismoFeature.ApplyParamsNow();
             return;
         }
 
@@ -123,10 +157,14 @@ public class GrupoDaltonismoUI_Slider : MonoBehaviour
     private void AplicarIntensidade(float v)
     {
         if (!daltonismoFeature) return;
+
         daltonismoFeature.intensidade = Mathf.Clamp01(v);
         daltonismoFeature.ApplyParamsNow();
     }
 
+    //---------------------------------------------
+    // SALVAMENTO
+    //---------------------------------------------
     private void Salvar()
     {
         if (carregando) return;
@@ -134,6 +172,7 @@ public class GrupoDaltonismoUI_Slider : MonoBehaviour
         PlayerPrefs.SetInt(KEY_ATIVO, chaveAtivar.EstaLigado ? 1 : 0);
         PlayerPrefs.SetInt(KEY_MODO, Mathf.RoundToInt(sliderModo.value));
         PlayerPrefs.SetFloat(KEY_INT, sliderIntensidade.value);
+
         PlayerPrefs.Save();
     }
 }

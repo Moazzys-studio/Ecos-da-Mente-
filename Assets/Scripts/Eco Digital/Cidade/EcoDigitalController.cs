@@ -55,42 +55,38 @@ public class EcoDigitalController : MonoBehaviour
 
     // ===================== MESMERIZE =====================
     [Header("Mesmerize")]
-    [Tooltip("Se verdadeiro, o Eco está sob efeito de Mesmerize (olhando para um outdoor).")]
+    [Tooltip("Se verdadeiro, o Eco está sob efeito de Mesmerize.")]
     public bool estaMesmerizado = false;
 
-    [Tooltip("Alvo que o Eco deve olhar enquanto mesmerizado (normalmente um Empty na frente do outdoor).")]
+    [Tooltip("Alvo que o Eco deve olhar enquanto mesmerizado.")]
     public Transform alvoMesmerize;
 
     [Tooltip("Velocidade de rotação para alinhar com o alvo do Mesmerize.")]
     [SerializeField] private float velocidadeRotacaoMesmerize = 6f;
 
-    // ===================== ANIMAÇÕES (GERENCIADOR) =====================
+    // ===================== ANIMAÇÕES =====================
     [Header("Animações (Gerenciador)")]
-    [Tooltip("Gerenciador responsável por controlar o Animator do Eco Digital.")]
     [SerializeField] private GerenciadorAnimacoesEcoDigital gerenciadorAnimacoes;
 
     // ===================== INPUT SYSTEM =====================
     [Header("Input System (Novo)")]
-    [Tooltip("PlayerInput que usa o InputSystem_Actions. Deve estar no mesmo GameObject.")]
     [SerializeField] private PlayerInput playerInput;
-
-    [Tooltip("Nome do Action Map usado pelo personagem (ex.: 'Player').")]
     [SerializeField] private string nomeActionMap = "Player";
-
-    [Tooltip("Nome da Action de movimento (ex.: 'Move').")]
     [SerializeField] private string nomeActionMove = "Move";
-
-    [Tooltip("Nome da Action de sprint (ex.: 'Sprint').")]
     [SerializeField] private string nomeActionSprint = "Sprint";
+
+    // ===================== MOBILE / JOYSTICK =====================
+    [Header("Mobile / Joystick")]
+    public bool usarJoystickMobile = true;
+    public FixedJoystick joystickMobile;
 
     // ===================== PRIVADOS =====================
     private Rigidbody rb;
-    private Vector2 entradaMovimentoRaw;       // valor que vem do Input System
-    private Vector2 entradaMovimentoFiltrada;  // após deadzone/histerese/compensação
-    private Vector2 entradaMovimentoSuave;     // após SmoothDamp
-    private Vector2 velSuavizacao;             // estado interno do SmoothDamp
-    private bool dentroDaZonaMorta = true;     // para histerese
-
+    private Vector2 entradaMovimentoRaw;
+    private Vector2 entradaMovimentoFiltrada;
+    private Vector2 entradaMovimentoSuave;
+    private Vector2 velSuavizacao;
+    private bool dentroDaZonaMorta = true;
     private Vector3 ultimaDirecaoPlanar = Vector3.forward;
 
     private void Awake()
@@ -118,53 +114,54 @@ public class EcoDigitalController : MonoBehaviour
         }
     }
 
-    // ========= CALLBACKS DO INPUT SYSTEM =========
-    // PlayerInput deve estar configurado para chamar estes métodos pela Action "Move" e "Sprint".
+    // ===================== INPUT CALLBACK =====================
     public void OnMove(InputValue valor)
     {
-        // Essa Action é a "Move" do Action Map Player.
+        if (usarJoystickMobile)
+            return;
+
         entradaMovimentoRaw = valor.Get<Vector2>();
     }
 
-    public void OnSprint(InputValue _)
-    {
-        // Intencionalmente vazio.
-        // O estado real do sprint é lido direto da Action "Sprint" no FixedUpdate.
-    }
+    public void OnSprint(InputValue _) { }
 
-    // ===================== API MESMERIZE =====================
+    // ===================== MESMERIZE API =====================
     public void AtivarMesmerize(Transform alvo)
     {
         estaMesmerizado = true;
-        alvoMesmerize   = alvo;
-
-        if (gerenciadorAnimacoes != null)
-            gerenciadorAnimacoes.DefinirMesmerizado(true);
+        alvoMesmerize = alvo;
+        gerenciadorAnimacoes?.DefinirMesmerizado(true);
     }
 
     public void DesativarMesmerize()
     {
         estaMesmerizado = false;
-        alvoMesmerize   = null;
-
-        if (gerenciadorAnimacoes != null)
-            gerenciadorAnimacoes.DefinirMesmerizado(false);
+        alvoMesmerize = null;
+        gerenciadorAnimacoes?.DefinirMesmerizado(false);
     }
 
     private void FixedUpdate()
     {
         AtualizarSprintEstado();
 
-        // Ainda respeita o empurrão / knockback
         if (gerenciadorAnimacoes != null && gerenciadorAnimacoes.EstaEmpurrado)
             return;
 
-        // 1) DEADZONE / HISTERSE
+        // ===================== JOYSTICK MOBILE =====================
+        if (usarJoystickMobile && joystickMobile != null)
+        {
+            entradaMovimentoRaw = new Vector2(
+                joystickMobile.Horizontal,
+                joystickMobile.Vertical
+            );
+        }
+
+        // ========== DEADZONE / HISTERSE ==========
         Vector2 bruto = entradaMovimentoRaw;
-        float mag     = bruto.magnitude;
+        float mag = bruto.magnitude;
 
         float limiarEntrar = Mathf.Clamp01(zonaMorta);
-        float limiarSair   = Mathf.Clamp01(zonaMorta + Mathf.Abs(histereseZonaMorta));
+        float limiarSair = Mathf.Clamp01(zonaMorta + Mathf.Abs(histereseZonaMorta));
 
         if (dentroDaZonaMorta)
         {
@@ -186,7 +183,7 @@ public class EcoDigitalController : MonoBehaviour
             if (compensarZonaMortaRadial && limiarEntrar > 0f && limiarEntrar < 1f)
             {
                 float magClamp = Mathf.Clamp(mag, limiarEntrar, 1f);
-                float magReesc = Mathf.InverseLerp(limiarEntrar, limiarSair <= 0f ? 1f : 1f, magClamp);
+                float magReesc = Mathf.InverseLerp(limiarEntrar, 1f, magClamp);
                 entradaMovimentoFiltrada = bruto.normalized * magReesc;
             }
             else
@@ -195,7 +192,7 @@ public class EcoDigitalController : MonoBehaviour
             }
         }
 
-        // 2) SUAVIZAÇÃO
+        // ========== SUAVIZAÇÃO ==========
         if (tempoSuavizacaoInput > 0f)
         {
             entradaMovimentoSuave = Vector2.SmoothDamp(
@@ -207,10 +204,7 @@ public class EcoDigitalController : MonoBehaviour
                 Time.fixedDeltaTime
             );
         }
-        else
-        {
-            entradaMovimentoSuave = entradaMovimentoFiltrada;
-        }
+        else entradaMovimentoSuave = entradaMovimentoFiltrada;
 
         Vector2 unit = entradaMovimentoSuave.sqrMagnitude > 1e-6f
             ? entradaMovimentoSuave.normalized
@@ -218,50 +212,51 @@ public class EcoDigitalController : MonoBehaviour
 
         float intensidade = Mathf.Clamp01(entradaMovimentoSuave.magnitude);
 
-        // 3) DIREÇÃO PLANAR
+        // ========== DIREÇÃO PLANAR ==========
         Vector3 direcaoPlanar = CalcularDirecaoPlanarNormalizada(unit);
 
         if (direcaoPlanar.sqrMagnitude >= limiarRotacao * limiarRotacao)
             ultimaDirecaoPlanar = direcaoPlanar;
 
-        // 4) MOVIMENTO FÍSICO (Sprint aplicado aqui)
+        // ========== MOVIMENTO FÍSICO ==========
         float velocidadeBase = velocidadeMovimento;
         if (sprintAtivo)
             velocidadeBase *= multiplicadorSprint;
 
-        Vector3 velocidadeDesejada = direcaoPlanar * (velocidadeBase * intensidade);
-
 #if UNITY_600_OR_NEWER
         Vector3 curVel = rb.linearVelocity;
-        rb.linearVelocity = new Vector3(velocidadeDesejada.x, curVel.y, velocidadeDesejada.z);
+        rb.linearVelocity = new Vector3(
+            direcaoPlanar.x * velocidadeBase * intensidade,
+            curVel.y,
+            direcaoPlanar.z * velocidadeBase * intensidade
+        );
 #else
         Vector3 curVel = rb.velocity;
-        rb.velocity = new Vector3(velocidadeDesejada.x, curVel.y, velocidadeDesejada.z);
+        rb.velocity = new Vector3(
+            direcaoPlanar.x * velocidadeBase * intensidade,
+            curVel.y,
+            direcaoPlanar.z * velocidadeBase * intensidade
+        );
 #endif
 
-        // 5) ROTAÇÃO VISUAL (Mesmerize tem prioridade)
+        // ========== ROTAÇÃO VISUAL ==========
         AtualizarRotacaoVisual(direcaoPlanar);
 
-        // 6) ANIMAÇÕES (tudo via GerenciadorAnimacoes)
-        if (gerenciadorAnimacoes != null)
-        {
-            gerenciadorAnimacoes.AtualizarLocomocao(velocidadeDesejada.magnitude, sprintAtivo);
+        // ========== ANIMAÇÕES ==========
+        gerenciadorAnimacoes?.AtualizarLocomocao(
+            (direcaoPlanar * (velocidadeBase * intensidade)).magnitude,
+            sprintAtivo
+        );
 
-            gerenciadorAnimacoes.AtualizarStrafeMesmerize(
-                velocidadeDesejada,
-                estaMesmerizado,
-                alvoMesmerize,
-                transform.position,
-                velocidadeMovimento
-            );
-        }
+        gerenciadorAnimacoes?.AtualizarStrafeMesmerize(
+            direcaoPlanar * velocidadeBase,
+            estaMesmerizado,
+            alvoMesmerize,
+            transform.position,
+            velocidadeMovimento
+        );
     }
 
-    /// <summary>
-    /// Lê diretamente o estado da Action "Sprint" pelo PlayerInput.
-    /// - PC: Left Shift [Keyboard] no Action Map Player/Sprint.
-    /// - Mobile: Touch #1 / Touch Contact? [Touchscreen] no mesmo Sprint.
-    /// </summary>
     private void AtualizarSprintEstado()
     {
         sprintAtivo = false;
@@ -273,7 +268,6 @@ public class EcoDigitalController : MonoBehaviour
         if (action == null)
             return;
 
-        // IsPressed() olha o estado real dos bindings, independe de interação.
         sprintAtivo = action.IsPressed();
     }
 
@@ -281,43 +275,42 @@ public class EcoDigitalController : MonoBehaviour
     {
         if (pivoModelo == null) return;
 
-        // MESMERIZE: sempre olha para o alvo
         if (estaMesmerizado && alvoMesmerize != null)
         {
             Vector3 dir = alvoMesmerize.position - transform.position;
             dir.y = 0f;
 
-            if (dir.sqrMagnitude > 0.0001f)
+            if (dir.sqrMagnitude > 0.001f)
             {
-                Quaternion rotBase      = Quaternion.LookRotation(dir.normalized, Vector3.up);
-                Quaternion rotCorrigida = rotBase * Quaternion.Euler(0f, deslocamentoYawModelo, 0f);
+                Quaternion rot = Quaternion.LookRotation(dir.normalized, Vector3.up);
+                Quaternion final = rot * Quaternion.Euler(0f, deslocamentoYawModelo, 0f);
 
-                float t = Mathf.Clamp01(velocidadeRotacaoMesmerize * Time.deltaTime);
-                pivoModelo.rotation = Quaternion.Slerp(pivoModelo.rotation, rotCorrigida, t);
+                pivoModelo.rotation = Quaternion.Slerp(
+                    pivoModelo.rotation,
+                    final,
+                    Mathf.Clamp01(velocidadeRotacaoMesmerize * Time.deltaTime)
+                );
             }
             return;
         }
 
-        // ROTAÇÃO NORMAL
-        Vector3 dirNormal = direcaoPlanar;
-        if (dirNormal.sqrMagnitude < limiarRotacao * limiarRotacao)
+        if (direcaoPlanar.sqrMagnitude < limiarRotacao * limiarRotacao)
         {
             if (!girarQuandoParado) return;
-            dirNormal = ultimaDirecaoPlanar;
-            if (dirNormal.sqrMagnitude < 1e-6f) return;
+            direcaoPlanar = ultimaDirecaoPlanar;
         }
 
-        Quaternion rotBaseNormal      = Quaternion.LookRotation(dirNormal, Vector3.up);
-        Quaternion rotCorrigidaNormal = rotBaseNormal * Quaternion.Euler(0f, deslocamentoYawModelo, 0f);
+        Quaternion rotBase = Quaternion.LookRotation(direcaoPlanar, Vector3.up);
+        Quaternion finalNormal = rotBase * Quaternion.Euler(0f, deslocamentoYawModelo, 0f);
 
         if (interpolacaoGiro <= 0f)
         {
-            pivoModelo.rotation = rotCorrigidaNormal;
+            pivoModelo.rotation = finalNormal;
         }
         else
         {
             float t = Mathf.Clamp01(interpolacaoGiro * Time.deltaTime);
-            pivoModelo.rotation = Quaternion.Slerp(pivoModelo.rotation, rotCorrigidaNormal, t);
+            pivoModelo.rotation = Quaternion.Slerp(pivoModelo.rotation, finalNormal, t);
         }
     }
 
@@ -331,7 +324,6 @@ public class EcoDigitalController : MonoBehaviour
             if (frente.sqrMagnitude < 1e-6f) frente = Vector3.forward;
 
             Vector3 direita = Vector3.Cross(Vector3.up, frente).normalized;
-            if (direita.sqrMagnitude < 1e-6f) direita = Vector3.right;
 
             Vector3 combinado = direita * inputUnitario.x + frente * inputUnitario.y;
             return combinado.sqrMagnitude > 1e-6f ? combinado.normalized : Vector3.zero;

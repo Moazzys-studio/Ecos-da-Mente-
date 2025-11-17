@@ -5,28 +5,22 @@ EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Scenes:
-  - enabled: 0
-    path: Assets/Acessibility/Prefabs/New Scene.unity
-    guid: 6f87c4466e88baa4dbd40295195bb1d9
   - enabled: 1
     path: Assets/Scenes/Menu.unity
     guid: c80192bb84cf31e428afeeb37ad8e22f
   - enabled: 1
-    path: Assets/Scenes/EcoDigital/Cidade.unity
-    guid: 99c9720ab356a0642a771bea13969a05
-  - enabled: 1
     path: "Assets/Scenes/EcoDigital/Introdu\xE7\xE3o Ecodigital.unity"
     guid: 1b88c420e5de040449cf6c1180d741cd
   - enabled: 1
-    path: Assets/Scenes/EcoStreamer/Estudio.unity
-    guid: e0d7905e9cae2e5459d6c22ce126ba06
+    path: Assets/Scenes/EcoDigital/Cidade.unity
+    guid: 99c9720ab356a0642a771bea13969a05
   - enabled: 1
-    path: Assets/Scenes/EcoStreamer/Infinite runner.unity
-    guid: dc51bc07c12f2b54b8b55ca6c41e3aa3
+    path: Assets/Scenes/EcoDigital/PuzzleEcoDigital.unity
+    guid: 21dcbc07e025dc946a718811b012411c
   - enabled: 1
-    path: Assets/Scenes/EcoStreamer/StreamerPerdeu.unity
-    guid: dcd4370a082fb9d4387f3da2484dea5b
+    path: Assets/Scenes/EcoDigital/DigitalPerdeu.unity
+    guid: d2d35398a08eded4bb9244f69d8b7790
   - enabled: 1
-    path: Assets/Scenes/EcoStreamer/StreamerGanhou.unity
-    guid: c8686d8f8b484fd4aa3f2f6974572a39
+    path: Assets/Scenes/EcoDigital/DigitalGanhou.unity
+    guid: 72057feba9ff2234996b460d6261ef57
   m_configObjects: {}

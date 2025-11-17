@@ -133,7 +133,6 @@ GameObject:
   - component: {fileID: 9194805}
   - component: {fileID: 9194807}
   - component: {fileID: 9194806}
-  - component: {fileID: 9194808}
   m_Layer: 5
   m_Name: PainelNotificacao
   m_TagString: Untagged
@@ -199,27 +198,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 9194804}
   m_CullTransparentMesh: 1
---- !u!95 &9194808
-Animator:
-  serializedVersion: 5
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 9194804}
-  m_Enabled: 1
-  m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 9100000, guid: 79792a51bb4e5bd40b5123f7ecc2f226, type: 2}
-  m_CullingMode: 0
-  m_UpdateMode: 0
-  m_ApplyRootMotion: 0
-  m_LinearVelocityBlending: 0
-  m_StabilizeFeet: 0
-  m_WarningMessage: 
-  m_HasTransformHierarchy: 1
-  m_AllowConstantClipSamplingOptimization: 1
-  m_KeepAnimatorStateOnDisable: 0
-  m_WriteDefaultValuesOnDisable: 0
 --- !u!1 &12186871
 GameObject:
   m_ObjectHideFlags: 0
@@ -19735,7 +19713,7 @@ MonoBehaviour:
   sistemaMensagens: {fileID: 2060987509}
   ansiedadeMax: 100
   velocidadeInterpolacaoBarra: 5
-  ansiedadePorMensagem: 2
+  ansiedadePorMensagem: 4
   ansiedadeColisaoConectado: 10
   ansiedadePorSegundoAuraConectado: 3
   ansiedadePorSegundoOutdoor: 4
@@ -28538,13 +28516,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   iniciarAutomatico: 1
-  intervaloSegundos: 10
+  intervaloSegundos: 15
   usarTimeScale: 1
   painelNaoLidas: {fileID: 250091770}
   textoNaoLidas: {fileID: 564235190}
   painelRecebida: {fileID: 9194804}
   textoRecebida: {fileID: 263292333}
-  tempoExibicaoRecebida: 4
+  tempoExibicaoRecebida: 1
 --- !u!4 &2060987510
 Transform:
   m_ObjectHideFlags: 0

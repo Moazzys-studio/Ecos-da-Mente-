@@ -131,7 +131,7 @@ public class GestorGatilhosEcoDigital : MonoBehaviour
         if (sliderAnsiedade != null && sliderAnsiedade.value >= 0.80f)
         {
             int indexAtual = SceneManager.GetActiveScene().buildIndex;
-            SceneManager.LoadScene("Introdução Ecodigital");
+            SceneManager.LoadScene("PuzzleEcoDigital");
         }
     }
 

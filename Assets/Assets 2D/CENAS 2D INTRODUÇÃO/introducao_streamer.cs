@@ -31,8 +31,6 @@ public class introducao_streamer : MonoBehaviour
     [Header("Texto na Tela")]
     public TMP_Text textoNarracao;
 
-    [Header("Máquina de escrever")]
-    public static float velocidadeLetra = 0.1f;
 
     void Start()
     {
@@ -53,7 +51,7 @@ public class introducao_streamer : MonoBehaviour
         foreach (char c in texto)
         {
             textoNarracao.text += c;
-            yield return new WaitForSeconds(velocidadeLetra);
+            yield return new WaitForSeconds(variaveis_menu.velocidadeLetra);
         }
 
         yield return new WaitForSeconds(0.6f); // pausa após o texto terminar

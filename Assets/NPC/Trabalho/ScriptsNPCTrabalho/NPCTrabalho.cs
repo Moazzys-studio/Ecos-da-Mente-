@@ -447,6 +447,16 @@ public class NPCTrabalho : MonoBehaviour
             _mouseDentro = true;
     }
 
+    private void OnTriggerEnter(Collider other)
+    {
+        if(other.CompareTag("Player"))
+        {
+            Debug.Log("alou");
+            GestorGatilhos.Instance.SomarNaBarra(10);
+            
+        }
+    }
+    
     private void OnMouseExit()
     {
         if (!Application.isMobilePlatform)
@@ -524,6 +534,7 @@ public class NPCTrabalho : MonoBehaviour
         }
         #endif
     }
+
 
     // =========================
     //   API ESTÁTICA/UTIL

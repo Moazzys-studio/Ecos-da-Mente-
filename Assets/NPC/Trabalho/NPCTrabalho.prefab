@@ -176,6 +176,7 @@ GameObject:
   - component: {fileID: 3296171630863058192}
   - component: {fileID: 9127004760978889567}
   - component: {fileID: 9099028926530243780}
+  - component: {fileID: 4607417378692644509}
   m_Layer: 11
   m_Name: NPCTrabalho
   m_TagString: Untagged
@@ -361,6 +362,27 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1, y: 2, z: 1}
   m_Center: {x: 0, y: 1, z: 0}
+--- !u!135 &4607417378692644509
+SphereCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1963558744417080545}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Radius: 3.52
+  m_Center: {x: 0, y: 0.86, z: 0}
 --- !u!1 &2047294191010675970
 GameObject:
   m_ObjectHideFlags: 0

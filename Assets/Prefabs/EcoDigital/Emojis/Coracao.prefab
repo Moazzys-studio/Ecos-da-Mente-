@@ -56,6 +56,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 8807572892280316281, guid: 081a9d3c0458a064e9f1b01bc2c78fc4, type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: 2bf67caae64b29441bc4af1ed4131d01, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -90,6 +94,7 @@ MonoBehaviour:
   minSpeed: 3
   maxSpeed: 8
   alturaOffset: 1.5
+  distanciaParaVibrar: 0.3
 --- !u!54 &2897024983704952552
 Rigidbody:
   m_ObjectHideFlags: 0

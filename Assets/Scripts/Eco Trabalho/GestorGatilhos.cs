@@ -2,6 +2,7 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Events;
+using UnityEngine.SceneManagement;
 
 [AddComponentMenu("Ecos/Gestor Gatilhos")]
 public class GestorGatilhos : MonoBehaviour
@@ -18,7 +19,7 @@ public class GestorGatilhos : MonoBehaviour
 
     [Header("Incrementos de Gatilhos")]
     [Tooltip("Quanto o GatilhoPortaSaida adiciona (ex.: 15).")]
-    [SerializeField] private int incrementoPortaSaida = 15;
+    public static int incrementoPortaSaida = 15;
 
     [Header("Fade de Tela (sobre a câmera/VCam)")]
     [Tooltip("Imagem full-screen preta no Canvas (a cor preta será animada no alfa).")]
@@ -49,6 +50,7 @@ public class GestorGatilhos : MonoBehaviour
 
     [Tooltip("Chamado quando a barra atinge o valor máximo.")]
     public UnityEvent OnBarraCheia;
+    public static GestorGatilhos Instance { get; private set; }
 
     [Header("Debug")]
     [SerializeField] private bool logDebug = false;
@@ -58,6 +60,7 @@ public class GestorGatilhos : MonoBehaviour
 
     private void Awake()
     {
+        Instance = this;
         if (telaPreta != null)
         {
             var c = telaPreta.color;
@@ -78,7 +81,7 @@ public class GestorGatilhos : MonoBehaviour
     }
 
     // ====== Barra ======
-    private void SomarNaBarra(int delta)
+    public void SomarNaBarra(int delta)
     {
         int anterior = valorAtual;
         valorAtual = Mathf.Clamp(valorAtual + delta, 0, Mathf.Max(1, valorMaximo));
@@ -98,6 +101,12 @@ public class GestorGatilhos : MonoBehaviour
             barraImage.fillAmount = Mathf.Clamp01(norm);
         }
         OnBarraAtualizada?.Invoke(norm);
+
+        if(barraImage.fillAmount >= 1)
+        {
+            Debug.Log("cena");
+            SceneManager.LoadScene("PuzzleTrabalho");
+        }
     }
 
     // ====== Fade + Teleporte ======

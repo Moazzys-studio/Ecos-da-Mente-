@@ -48,6 +48,14 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -6093592463355912122, guid: a5bb9a3c63671a144a88e00f9fbcd38c, type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: 2b03ba2b6cd129746af732cda7a524f4, type: 2}
+    - target: {fileID: -804731622281664130, guid: a5bb9a3c63671a144a88e00f9fbcd38c, type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: 2b03ba2b6cd129746af732cda7a524f4, type: 2}
     - target: {fileID: 919132149155446097, guid: a5bb9a3c63671a144a88e00f9fbcd38c, type: 3}
       propertyPath: m_Name
       value: EmojiBravo
@@ -56,6 +64,18 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 2915357609019638705, guid: a5bb9a3c63671a144a88e00f9fbcd38c, type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: b10ef16168f53854c9673284f80cf814, type: 2}
+    - target: {fileID: 4008791811287642139, guid: a5bb9a3c63671a144a88e00f9fbcd38c, type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: 2b03ba2b6cd129746af732cda7a524f4, type: 2}
+    - target: {fileID: 7790843065575244577, guid: a5bb9a3c63671a144a88e00f9fbcd38c, type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: 2b03ba2b6cd129746af732cda7a524f4, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -90,6 +110,7 @@ MonoBehaviour:
   minSpeed: 3
   maxSpeed: 8
   alturaOffset: 1.5
+  distanciaParaVibrar: 0.3
 --- !u!54 &1385136546187431382
 Rigidbody:
   m_ObjectHideFlags: 0

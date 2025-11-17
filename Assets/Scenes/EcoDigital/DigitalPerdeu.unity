@@ -720,6 +720,14 @@ PrefabInstance:
       propertyPath: InitialModule.startLifetime.scalar
       value: 4.04
       objectReference: {fileID: 0}
+    - target: {fileID: 7042277676860405404, guid: 496349c8cff1ce945bb9b3d02ce9d3e0, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8645112493626594756, guid: 496349c8cff1ce945bb9b3d02ce9d3e0, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 8645112493626594756, guid: 496349c8cff1ce945bb9b3d02ce9d3e0, type: 3}
       propertyPath: cornerTolerance
       value: 0.86
@@ -832,6 +840,14 @@ PrefabInstance:
     - target: {fileID: 6634900383977551806, guid: 496349c8cff1ce945bb9b3d02ce9d3e0, type: 3}
       propertyPath: InitialModule.startLifetime.scalar
       value: 2.78
+      objectReference: {fileID: 0}
+    - target: {fileID: 7042277676860405404, guid: 496349c8cff1ce945bb9b3d02ce9d3e0, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8645112493626594756, guid: 496349c8cff1ce945bb9b3d02ce9d3e0, type: 3}
+      propertyPath: m_Enabled
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8645112493626594756, guid: 496349c8cff1ce945bb9b3d02ce9d3e0, type: 3}
       propertyPath: cornerTolerance
@@ -2336,6 +2352,14 @@ PrefabInstance:
       propertyPath: InitialModule.startLifetime.scalar
       value: 5.03
       objectReference: {fileID: 0}
+    - target: {fileID: 7042277676860405404, guid: 496349c8cff1ce945bb9b3d02ce9d3e0, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8645112493626594756, guid: 496349c8cff1ce945bb9b3d02ce9d3e0, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 8645112493626594756, guid: 496349c8cff1ce945bb9b3d02ce9d3e0, type: 3}
       propertyPath: cornerTolerance
       value: 0.86
@@ -2456,6 +2480,14 @@ PrefabInstance:
     - target: {fileID: 6634900383977551806, guid: 496349c8cff1ce945bb9b3d02ce9d3e0, type: 3}
       propertyPath: InitialModule.startLifetime.scalar
       value: 5.03
+      objectReference: {fileID: 0}
+    - target: {fileID: 7042277676860405404, guid: 496349c8cff1ce945bb9b3d02ce9d3e0, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8645112493626594756, guid: 496349c8cff1ce945bb9b3d02ce9d3e0, type: 3}
+      propertyPath: m_Enabled
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8645112493626594756, guid: 496349c8cff1ce945bb9b3d02ce9d3e0, type: 3}
       propertyPath: cornerTolerance

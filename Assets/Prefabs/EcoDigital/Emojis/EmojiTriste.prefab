@@ -48,10 +48,26 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -678588488315902003, guid: e4e3751ada55e2f4ab0936e7ca169c7c, type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: 2b03ba2b6cd129746af732cda7a524f4, type: 2}
     - target: {fileID: 919132149155446097, guid: e4e3751ada55e2f4ab0936e7ca169c7c, type: 3}
       propertyPath: m_Name
       value: EmojiTriste
       objectReference: {fileID: 0}
+    - target: {fileID: 6317578925029434746, guid: e4e3751ada55e2f4ab0936e7ca169c7c, type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: b10ef16168f53854c9673284f80cf814, type: 2}
+    - target: {fileID: 6829333093618665122, guid: e4e3751ada55e2f4ab0936e7ca169c7c, type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: 2b03ba2b6cd129746af732cda7a524f4, type: 2}
+    - target: {fileID: 8100320773420232829, guid: e4e3751ada55e2f4ab0936e7ca169c7c, type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: 2b03ba2b6cd129746af732cda7a524f4, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -134,3 +150,4 @@ MonoBehaviour:
   minSpeed: 3
   maxSpeed: 8
   alturaOffset: 2
+  distanciaParaVibrar: 0.3

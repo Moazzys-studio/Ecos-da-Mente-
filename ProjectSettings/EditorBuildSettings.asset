@@ -12,6 +12,12 @@ EditorBuildSettings:
     path: Assets/Scenes/Menu.unity
     guid: c80192bb84cf31e428afeeb37ad8e22f
   - enabled: 1
+    path: Assets/Scenes/EcoDigital/Cidade.unity
+    guid: 99c9720ab356a0642a771bea13969a05
+  - enabled: 1
+    path: "Assets/Scenes/EcoDigital/Introdu\xE7\xE3o Ecodigital.unity"
+    guid: 1b88c420e5de040449cf6c1180d741cd
+  - enabled: 1
     path: Assets/Scenes/EcoStreamer/Estudio.unity
     guid: e0d7905e9cae2e5459d6c22ce126ba06
   - enabled: 1

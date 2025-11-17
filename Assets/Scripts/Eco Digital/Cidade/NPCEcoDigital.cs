@@ -8,93 +8,51 @@ public class NPCEcoDigital : MonoBehaviour
     public enum PerfilNPC { Feliz, Conectado }
     public enum Estado { Idle, Andando, OlhandoAoRedor, ChecandoCelular }
 
+    [Header("Comportamento Opcional")]
+    [Tooltip("Se habilitado, o NPC ficará completamente parado, sem andar ou agir.")]
+    [SerializeField] private bool npcFicaParado = false;
+
     [Header("Perfil")]
     [SerializeField] private PerfilNPC perfil = PerfilNPC.Feliz;
 
     [Header("Referências")]
-    [SerializeField] private Animator animator; // opcional
-    [Tooltip("Limites opcionais para manter o NPC dentro. Deixe vazio para ignorar.")]
+    [SerializeField] private Animator animator;
     [SerializeField] private BoxCollider limites;
-    [Tooltip("Referência ao Eco (jogador). Usado no comportamento de bloquear caminho (Conectado).")]
     [SerializeField] private Transform eco;
 
     [Header("Movimento")]
-    [Tooltip("Raio máximo para buscar novos destinos aleatórios.")]
     [SerializeField, Min(1f)] private float raioBuscaDestino = 30f;
-    [Tooltip("Distância mínima para considerar que chegou no destino.")]
     [SerializeField, Min(0.1f)] private float distanciaChegada = 1.0f;
-
-    [Tooltip("Velocidade base mínima e máxima. O script varia dentro desse range.")]
     [SerializeField] private Vector2 velocidadeRange = new Vector2(1.1f, 2.6f);
-
-    [Tooltip("Quanto tempo parado entre caminhadas (Idle).")]
     [SerializeField] private Vector2 pausaIdleSeg = new Vector2(1.0f, 3.0f);
-
-    [Tooltip("Tempo olhando ao redor (Feliz).")]
     [SerializeField] private Vector2 tempoOlharSeg = new Vector2(1.0f, 2.0f);
-
-    [Tooltip("Tempo checando celular (Conectado).")]
     [SerializeField] private Vector2 tempoChecarSeg = new Vector2(2.0f, 4.0f);
 
     [Header("Variedade")]
-    [Tooltip("Probabilidade de escolher um PontoInteresse (0..1).")]
     [SerializeField, Range(0f, 1f)] private float probPontoInteresse = 0.35f;
-
-    [Tooltip("Peso para escolher destinos mais longos às vezes (0..1).")]
     [SerializeField, Range(0f, 1f)] private float pesoDestinoLongo = 0.4f;
-
-    [Tooltip("Armazena posições recentes para evitar voltar pro mesmo lugar.")]
     [SerializeField] private int memoriaPosicoes = 6;
     [SerializeField, Min(1f)] private float distanciaMinimaDePosicaoMemorizada = 6f;
-
-    [Tooltip("Se ficar preso por esse tempo sem progresso, replaneja destino.")]
     [SerializeField, Min(0.5f)] private float tempoSemProgressoReplanejar = 3f;
 
     [Header("Suavização de rota")]
-    [Tooltip("Alcance para considerar mudança de corner.")]
     [SerializeField, Min(0.1f)] private float cornerTolerance = 0.4f;
 
-    // ========== BLOQUEAR CAMINHO DO ECO (perfil Conectado) ==========
     [Header("Bloquear caminho do Eco (Conectado)")]
-    [Tooltip("Ativar comportamento de atravessar na frente do Eco.")]
     [SerializeField] private bool tentarBloquearEco = true;
-
-    [Tooltip("Distância máxima para o NPC se preocupar em bloquear o Eco.")]
     [SerializeField] private float distanciaParaBloqueio = 10f;
-
-    [Tooltip("Offset à frente do Eco onde o NPC tenta chegar (eixo X, side-scroller).")]
     [SerializeField] private float offsetFrenteEco = 1.5f;
-
-    [Tooltip("Desvio lateral em Z para não ficar sempre na mesma linha.")]
     [SerializeField] private float desvioLateralMax = 0.5f;
-
-    [Range(0f, 1f)]
-    [Tooltip("Chance de, ao checar o Eco, decidir tentar bloquear.")]
-    [SerializeField] private float chanceDeBloquear = 0.4f;
-
-    [Tooltip("Tempo mínimo entre tentativas de bloqueio (segundos).")]
+    [SerializeField, Range(0f, 1f)] private float chanceDeBloquear = 0.4f;
     [SerializeField] private float intervaloMinEntreBloqueios = 3f;
-
-    [Tooltip("Tempo máximo entre tentativas de bloqueio (segundos).")]
     [SerializeField] private float intervaloMaxEntreBloqueios = 7f;
-
-    [Tooltip("Travar o eixo Z do NPC em uma faixa fixa da calçada (side-view).")]
     [SerializeField] private bool travarZ = true;
-
-    [Tooltip("Valor de Z travado (se 0, usa o Z atual no Start).")]
     [SerializeField] private float zTravado = 0f;
-    // ================================================================
 
-    // ========== ANIM: novos parâmetros opcionais ==========
     [Header("Animator (Parado/Andando por Perfil)")]
-    [Tooltip("Nome do parâmetro INT que indica o perfil no Animator (0=Feliz, 1=Conectado).")]
     [SerializeField] private string nomeParamPerfilIndex = "PerfilIndex";
-
-    [Tooltip("Nome do parâmetro BOOL que indica se está andando.")]
     [SerializeField] private string nomeParamAndando = "Andando";
-    // ======================================================
 
-    // Internos
     private NavMeshAgent agent;
     private Estado estadoAtual = Estado.Idle;
     private float cronometroEstado = 0f;
@@ -106,11 +64,8 @@ public class NPCEcoDigital : MonoBehaviour
     private readonly List<Transform> pontosInteresse = new List<Transform>();
     private readonly List<Vector3> rotaCorners = new List<Vector3>();
     private int cornerIndex = 0;
-
-    // cooldown para bloqueio do Eco
     private float proximaTentativaBloqueio = 0f;
 
-    // Animator params (existentes)
     private static readonly int HASH_Speed = Animator.StringToHash("Speed");
     private static readonly int HASH_ChecandoCelular = Animator.StringToHash("ChecandoCelular");
     private static readonly int HASH_Olhando = Animator.StringToHash("Olhando");
@@ -123,28 +78,22 @@ public class NPCEcoDigital : MonoBehaviour
 
     void Start()
     {
-        // Ajustes iniciais por perfil
         switch (perfil)
         {
             case PerfilNPC.Feliz:
-                SetRandomSpeed(scaleMin: 0.9f, scaleMax: 1.1f);
+                SetRandomSpeed(0.9f, 1.1f);
                 break;
             case PerfilNPC.Conectado:
-                SetRandomSpeed(scaleMin: 0.8f, scaleMax: 1.2f);
+                SetRandomSpeed(0.8f, 1.2f);
                 break;
         }
 
-        // Se for para travar Z, usa o valor atual como faixa
         if (travarZ)
-        {
             zTravado = transform.position.z;
-        }
 
-        // Carrega Pontos de Interesse (tag opcional)
         var gos = GameObject.FindGameObjectsWithTag("PontoInteresse");
         foreach (var go in gos) pontosInteresse.Add(go.transform);
 
-        // ANIM: seta o PerfilIndex uma vez ao iniciar
         SetPerfilIndexNoAnimator();
 
         ultimoPontoProgresso = transform.position;
@@ -155,7 +104,20 @@ public class NPCEcoDigital : MonoBehaviour
     {
         cronometroEstado += Time.deltaTime;
 
-        // travar Z em side-view
+        // 🔥 NPC FICA PARADO — NÃO FAZ NADA ALÉM DE IDLE
+        if (npcFicaParado)
+        {
+            agent.isStopped = true;
+            agent.velocity = Vector3.zero;
+
+            if (estadoAtual != Estado.Idle)
+                TrocarEstado(Estado.Idle, 1f);
+
+            AtualizarAnimator();
+            return; // bloqueia TODO o resto
+        }
+        // 🔥 FIM DO MODO PARADO
+
         if (travarZ)
         {
             var pos = transform.position;
@@ -165,7 +127,6 @@ public class NPCEcoDigital : MonoBehaviour
 
         AtualizarAnimator();
 
-        // Detecção de “travamento”
         float avancou = Vector3.Distance(transform.position, ultimoPontoProgresso);
         if (avancou > 0.05f)
         {
@@ -177,12 +138,9 @@ public class NPCEcoDigital : MonoBehaviour
             tempoSemProgresso += Time.deltaTime;
             if (tempoSemProgresso >= tempoSemProgressoReplanejar)
             {
-                // Replaneja
                 tempoSemProgresso = 0f;
                 if (estadoAtual == Estado.Andando)
-                {
                     EscolherNovoDestino();
-                }
             }
         }
 
@@ -217,22 +175,14 @@ public class NPCEcoDigital : MonoBehaviour
                     MemorizarPosicao(transform.position);
                     TrocarEstado(Estado.Idle, Random.Range(pausaIdleSeg.x, pausaIdleSeg.y));
                 }
-                else
-                {
-                    if (Random.value < 0.01f)
-                        SetRandomSpeed(0.9f, 1.1f);
-                }
+                else if (Random.value < 0.01f)
+                    SetRandomSpeed(0.9f, 1.1f);
                 break;
         }
 
-        // Comportamento extra: tentar bloquear o Eco (apenas Conectado)
         if (perfil == PerfilNPC.Conectado && tentarBloquearEco && eco != null)
-        {
             AtualizarBloqueioEco();
-        }
     }
-
-    // ======= LÓGICA DE ROTA/DESTINOS =======
 
     private void IniciarCaminhada()
     {
@@ -244,7 +194,6 @@ public class NPCEcoDigital : MonoBehaviour
     {
         Vector3 alvo;
 
-        // 1) Às vezes escolhe um Ponto de Interesse
         if (pontosInteresse.Count > 0 && Random.value < probPontoInteresse)
         {
             Transform t = pontosInteresse[Random.Range(0, pontosInteresse.Count)];
@@ -255,7 +204,6 @@ public class NPCEcoDigital : MonoBehaviour
             }
         }
 
-        // 2) Aleatório dentro de um raio (com pesos para distâncias)
         float raioEscolhido = EscolherRaioPonderado();
         for (int i = 0; i < 20; i++)
         {
@@ -270,7 +218,6 @@ public class NPCEcoDigital : MonoBehaviour
             }
         }
 
-        // 3) fallback: tenta mais amplo
         for (int i = 0; i < 20; i++)
         {
             Vector3 tentativa = PontoAleatorio(raioBuscaDestino);
@@ -294,7 +241,7 @@ public class NPCEcoDigital : MonoBehaviour
         }
         else
         {
-            agent.SetDestination(destino); // fallback
+            agent.SetDestination(destino);
         }
 
         if (perfil == PerfilNPC.Conectado)
@@ -304,10 +251,9 @@ public class NPCEcoDigital : MonoBehaviour
                 Vector3 c = rotaCorners[rotaCorners.Count - 1];
                 Vector2 jitter = Random.insideUnitCircle * 1.2f;
                 Vector3 jig = new Vector3(c.x + jitter.x, c.y, c.z + jitter.y);
+
                 if (TentarProjetarNoNavMesh(jig, out var jigNav))
-                {
                     agent.SetDestination(jigNav);
-                }
             }
         }
     }
@@ -321,9 +267,7 @@ public class NPCEcoDigital : MonoBehaviour
             float d = Vector3.Distance(flatPos, alvo);
 
             if (d <= cornerTolerance)
-            {
                 cornerIndex++;
-            }
         }
     }
 
@@ -339,8 +283,8 @@ public class NPCEcoDigital : MonoBehaviour
     private Vector3 PontoAleatorio(float raio)
     {
         Vector2 v = Random.insideUnitCircle * raio;
-        Vector3 basePos = transform.position + new Vector3(v.x, 0f, v.y);
-        return new Vector3(basePos.x, transform.position.y, basePos.z);
+        Vector3 b = transform.position + new Vector3(v.x, 0f, v.y);
+        return new Vector3(b.x, transform.position.y, b.z);
     }
 
     private bool TentarProjetarNoNavMesh(Vector3 pos, out Vector3 projetado)
@@ -385,6 +329,7 @@ public class NPCEcoDigital : MonoBehaviour
         float baseMax = Mathf.Max(baseMin + 0.01f, velocidadeRange.y);
         float baseSpeed = Random.Range(baseMin, baseMax);
         float scale = Random.Range(scaleMin, scaleMax);
+
         agent.speed = baseSpeed * scale;
         agent.acceleration = Mathf.Max(4f, agent.speed * 3f);
         agent.angularSpeed = Mathf.Lerp(180f, 300f, 0.5f);
@@ -400,18 +345,10 @@ public class NPCEcoDigital : MonoBehaviour
 
         switch (novo)
         {
-            case Estado.Idle:
-                agent.isStopped = true;
-                break;
-            case Estado.Andando:
-                agent.isStopped = false;
-                break;
-            case Estado.OlhandoAoRedor:
-                agent.isStopped = true;
-                break;
-            case Estado.ChecandoCelular:
-                agent.isStopped = true;
-                break;
+            case Estado.Idle: agent.isStopped = true; break;
+            case Estado.Andando: agent.isStopped = false; break;
+            case Estado.OlhandoAoRedor: agent.isStopped = true; break;
+            case Estado.ChecandoCelular: agent.isStopped = true; break;
         }
     }
 
@@ -422,31 +359,26 @@ public class NPCEcoDigital : MonoBehaviour
         float vel = agent.velocity.magnitude;
         bool andando = vel > 0.05f && !agent.isStopped;
 
-        // Atualiza o parâmetro Andando (idle vs movimento)
         if (animator.HasParameterOfType(nomeParamAndando, AnimatorControllerParameterType.Bool))
             animator.SetBool(nomeParamAndando, andando);
 
-        // Atualiza flags específicas se você estiver usando (opcional)
         animator.SetFloat(HASH_Speed, vel);
 
-        bool checando = (estadoAtual == Estado.ChecandoCelular);
-        bool olhando = (estadoAtual == Estado.OlhandoAoRedor);
-        animator.SetBool(HASH_ChecandoCelular, checando);
-        animator.SetBool(HASH_Olhando, olhando);
+        animator.SetBool(HASH_ChecandoCelular, estadoAtual == Estado.ChecandoCelular);
+        animator.SetBool(HASH_Olhando, estadoAtual == Estado.OlhandoAoRedor);
     }
 
-    // ANIM: helper para setar o INT de perfil no Animator
     private void SetPerfilIndexNoAnimator()
     {
         if (!animator || string.IsNullOrEmpty(nomeParamPerfilIndex)) return;
         if (!animator.HasParameterOfType(nomeParamPerfilIndex, AnimatorControllerParameterType.Int)) return;
 
         int idx = perfil == PerfilNPC.Feliz ? 0 : 1;
+
         if (animator.GetInteger(nomeParamPerfilIndex) != idx)
             animator.SetInteger(nomeParamPerfilIndex, idx);
     }
 
-    // ======= BLOQUEAR ECO (somente perfil Conectado) =======
     private void AtualizarBloqueioEco()
     {
         if (Time.time < proximaTentativaBloqueio)
@@ -456,31 +388,25 @@ public class NPCEcoDigital : MonoBehaviour
         if (dist > distanciaParaBloqueio)
             return;
 
-        // Chance de realmente bloquear
         if (Random.value > chanceDeBloquear)
         {
             proximaTentativaBloqueio = Time.time + Random.Range(intervaloMinEntreBloqueios, intervaloMaxEntreBloqueios);
             return;
         }
 
-        // Ponto à frente do Eco (side-scroller no eixo X)
         Vector3 alvo = eco.position;
         alvo.x += offsetFrenteEco;
 
         if (travarZ)
-        {
-            // mesma faixa de Z do NPC, com leve variação
             alvo.z = zTravado + Random.Range(-desvioLateralMax, desvioLateralMax);
-        }
 
-        if (TentarProjetarNoNavMesh(alvo, out var projetado))
+        if (TentarProjetarNoNavMesh(alvo, out var proj))
         {
-            SetDestino(projetado);
+            SetDestino(proj);
             proximaTentativaBloqueio = Time.time + Random.Range(intervaloMinEntreBloqueios, intervaloMaxEntreBloqueios);
         }
         else
         {
-            // se não achar navmesh ali, tenta de novo daqui a pouco
             proximaTentativaBloqueio = Time.time + 2f;
         }
     }

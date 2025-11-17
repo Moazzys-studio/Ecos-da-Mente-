@@ -62,21 +62,14 @@ public class GestorGatilhosEcoDigital : MonoBehaviour
 
     // ===== ESTADO INTERNO =====
 
-    // valor lógico da ansiedade (0..ansiedadeMax)
-    private float ansiedadeAtual = 0f;
+    private float ansiedadeAtual = 0f; // valor real 0..ansiedadeMax
 
-    // contadores de zonas ativas
     private int qtdAurasConectado = 0;
     private int qtdZonasOutdoor = 0;
     private int qtdZonasConforto = 0;
 
-    // controle de derrota
     private bool jaDerrotou = false;
-
-    // controle de pausa de mensagens em zona de conforto
     private bool mensagensPausadasEmConforto = false;
-
-    // ================= UNITY =================
 
     private void Awake()
     {
@@ -89,7 +82,6 @@ public class GestorGatilhosEcoDigital : MonoBehaviour
         if (sistemaMensagens == null)
             Debug.LogWarning("[GestorGatilhosEcoDigital] SistemaMensagens não atribuído.");
 
-        // Garante configuração básica do slider
         if (sliderAnsiedade != null)
         {
             sliderAnsiedade.minValue = 0f;
@@ -97,7 +89,6 @@ public class GestorGatilhosEcoDigital : MonoBehaviour
             sliderAnsiedade.value = 0f;
         }
 
-        // Inicia cor do handle na cor "tranquila"
         AtualizarCorHandle(0f);
     }
 
@@ -119,60 +110,52 @@ public class GestorGatilhosEcoDigital : MonoBehaviour
 
         float delta = Time.deltaTime;
 
-        // 1) Aura de NPC CONECTADO -> dano por segundo
+        // 1) Aura de NPC conectado -> ansiedade por segundo
         if (qtdAurasConectado > 0 && ansiedadePorSegundoAuraConectado > 0f)
-        {
-            float aumento = ansiedadePorSegundoAuraConectado * qtdAurasConectado * delta;
-            ModificarAnsiedade(aumento);
-        }
+            ModificarAnsiedade(ansiedadePorSegundoAuraConectado * qtdAurasConectado * delta);
 
-        // 2) Outdoor -> dano por segundo
+        // 2) Outdoor -> ansiedade por segundo
         if (qtdZonasOutdoor > 0 && ansiedadePorSegundoOutdoor > 0f)
-        {
-            float aumento = ansiedadePorSegundoOutdoor * qtdZonasOutdoor * delta;
-            ModificarAnsiedade(aumento);
-        }
+            ModificarAnsiedade(ansiedadePorSegundoOutdoor * qtdZonasOutdoor * delta);
 
         // 3) Zona de conforto -> reduz por segundo
         if (qtdZonasConforto > 0 && ansiedadePorSegundoConforto > 0f)
-        {
-            float reducao = ansiedadePorSegundoConforto * qtdZonasConforto * delta;
-            ModificarAnsiedade(-reducao);
-        }
+            ModificarAnsiedade(-ansiedadePorSegundoConforto * qtdZonasConforto * delta);
 
-        // 4) Interpolação visual do slider
+        // 4) Interpolação da barra
         AtualizarBarraVisual(delta);
-    }
 
-    // ================= EVENTOS / CALLBACKS =================
+        // ---------------------------------------------
+        // troca para a próxima cena ao chegar a 0.80
+        // ---------------------------------------------
+        if (sliderAnsiedade != null && sliderAnsiedade.value >= 0.80f)
+        {
+            int indexAtual = SceneManager.GetActiveScene().buildIndex;
+            SceneManager.LoadScene("Introdução Ecodigital");
+        }
+    }
 
     private void OnNotificacaoRecebida(int naoLidasAtual)
     {
-        // Cada notificação somará um valor fixo de ansiedade.
         ModificarAnsiedade(ansiedadePorMensagem);
     }
 
-    // ================= LÓGICA PRINCIPAL =================
-
     private void ModificarAnsiedade(float delta)
-{
-    if (jaDerrotou) return;
-
-    ansiedadeAtual += delta;
-    ansiedadeAtual = Mathf.Clamp(ansiedadeAtual, 0f, ansiedadeMax);
-
-    // >>>>>>> ADICIONA ISSO <<<<<<<
-    if (gerenciadorAnimacoes != null)
-        gerenciadorAnimacoes.AtualizarAnsiedade(ansiedadeAtual);
-    // >>>>>>>>>>>>>>>>>>>>>>>>>>>>
-
-    if (AnsiedadeChegouNoMaximo())
     {
-        ansiedadeAtual = ansiedadeMax;
-        DispararDerrota();
-    }
-}
+        if (jaDerrotou) return;
 
+        ansiedadeAtual += delta;
+        ansiedadeAtual = Mathf.Clamp(ansiedadeAtual, 0f, ansiedadeMax);
+
+        if (gerenciadorAnimacoes != null)
+            gerenciadorAnimacoes.AtualizarAnsiedade(ansiedadeAtual);
+
+        if (AnsiedadeChegouNoMaximo())
+        {
+            ansiedadeAtual = ansiedadeMax;
+            DispararDerrota();
+        }
+    }
 
     private bool AnsiedadeChegouNoMaximo()
     {
@@ -183,7 +166,7 @@ public class GestorGatilhosEcoDigital : MonoBehaviour
     {
         if (sliderAnsiedade == null) return;
 
-        float alvo = ansiedadeAtual / ansiedadeMax; // 0..1
+        float alvo = ansiedadeAtual / ansiedadeMax;
         float atual = sliderAnsiedade.value;
 
         float novo = Mathf.Lerp(atual, alvo, velocidadeInterpolacaoBarra * deltaTime);
@@ -196,10 +179,7 @@ public class GestorGatilhosEcoDigital : MonoBehaviour
     {
         if (handleImagem == null) return;
 
-        // Cor base (mais "tranquila") – um amarelo claro / laranja suave
         Color corInicial = new Color(1f, 0.85f, 0.3f);
-
-        // Cor final – vermelho total
         Color corFinal = Color.red;
 
         handleImagem.color = Color.Lerp(corInicial, corFinal, Mathf.Clamp01(valorNormalizado));
@@ -213,24 +193,18 @@ public class GestorGatilhosEcoDigital : MonoBehaviour
         Debug.Log("[GestorGatilhosEcoDigital] Ansiedade chegou ao máximo. Carregando cena de derrota...");
 
         if (!string.IsNullOrEmpty(nomeCenaDerrota))
-        {
             SceneManager.LoadScene(nomeCenaDerrota);
-        }
         else
-        {
             Debug.LogWarning("[GestorGatilhosEcoDigital] Nome da cena de derrota não definido.");
-        }
     }
 
     public void AdicionarAnsiedade(float delta)
     {
         ansiedadeAtual = Mathf.Clamp(ansiedadeAtual + delta, 0f, 100f);
 
-        // Atualiza UI
         if (sliderAnsiedade != null)
             sliderAnsiedade.value = ansiedadeAtual;
 
-        // MUITO IMPORTANTE: avisar o Animator
         if (gerenciadorAnimacoes != null)
             gerenciadorAnimacoes.AtualizarAnsiedade(ansiedadeAtual);
     }
@@ -240,51 +214,31 @@ public class GestorGatilhosEcoDigital : MonoBehaviour
         AdicionarAnsiedade(-delta);
     }
 
-    // ================= API PÚBLICA PARA GATILHOS =================
-
-    /// <summary>
-    /// Colisão física com NPC CONECTADO.
-    /// </summary>
     public void RegistrarColisaoNpcConectado()
     {
         ModificarAnsiedade(ansiedadeColisaoConectado);
     }
 
-    /// <summary>
-    /// Eco entrou na AURA de um NPC CONECTADO.
-    /// </summary>
     public void EntrouAuraNpcConectado()
     {
         qtdAurasConectado = Mathf.Max(0, qtdAurasConectado + 1);
     }
 
-    /// <summary>
-    /// Eco saiu da AURA de um NPC CONECTADO.
-    /// </summary>
     public void SaiuAuraNpcConectado()
     {
         qtdAurasConectado = Mathf.Max(0, qtdAurasConectado - 1);
     }
 
-    /// <summary>
-    /// Eco entrou na área de um outdoor (Mesmerize).
-    /// </summary>
     public void EntrouZonaOutdoor()
     {
         qtdZonasOutdoor = Mathf.Max(0, qtdZonasOutdoor + 1);
     }
 
-    /// <summary>
-    /// Eco saiu da área de um outdoor.
-    /// </summary>
     public void SaiuZonaOutdoor()
     {
         qtdZonasOutdoor = Mathf.Max(0, qtdZonasOutdoor - 1);
     }
 
-    /// <summary>
-    /// Eco entrou em uma Zona de Conforto.
-    /// </summary>
     public void EntrouZonaConforto()
     {
         qtdZonasConforto = Mathf.Max(0, qtdZonasConforto + 1);
@@ -296,9 +250,6 @@ public class GestorGatilhosEcoDigital : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Eco saiu de uma Zona de Conforto.
-    /// </summary>
     public void SaiuZonaConforto()
     {
         qtdZonasConforto = Mathf.Max(0, qtdZonasConforto - 1);
@@ -309,8 +260,6 @@ public class GestorGatilhosEcoDigital : MonoBehaviour
             mensagensPausadasEmConforto = false;
         }
     }
-
-    // ================= GETTERS OPCIONAIS =================
 
     public float ObterAnsiedadeAtual() => ansiedadeAtual;
     public float ObterAnsiedadeNormalizada() => ansiedadeAtual / ansiedadeMax;

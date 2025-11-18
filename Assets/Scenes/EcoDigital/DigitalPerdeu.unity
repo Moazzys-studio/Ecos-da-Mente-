@@ -2604,7 +2604,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 2080394155}
         m_TargetAssemblyTypeName: btns_ecoStreamer, Assembly-CSharp
-        m_MethodName: sair
+        m_MethodName: sair_digital
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}

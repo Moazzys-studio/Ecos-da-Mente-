@@ -9,4 +9,12 @@ public class btns_Fases : MonoBehaviour
     {
       SceneManager.LoadScene("Introdução ecodigital");
     }
+    public void Fase_2()
+    {
+      SceneManager.LoadScene("Introdução do trabalho");
+    }
+    public void Fase_3()
+    {
+      SceneManager.LoadScene("Estudio");
+    }
 }

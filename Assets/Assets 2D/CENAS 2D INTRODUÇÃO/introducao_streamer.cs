@@ -69,14 +69,14 @@ public class introducao_streamer : MonoBehaviour
 
         textoNarracao.text = "";
 
-        // 🔹 IMAGEM 1
+        // IMAGEM 1
         imagem1.SetActive(true);
         yield return StartCoroutine(EscreverTexto(
             "No início, Eco ainda conseguia criar. Ali, no silêncio do estúdio, ele sentia que finalmente podia respirar — como se o mundo lá fora não existisse."
         ));
         yield return new WaitForSeconds(tempoEntreImagens);
 
-        // 🔹 IMAGEM 2
+        // IMAGEM 2
         imagem2.SetActive(true);
         yield return StartCoroutine(EscreverTexto(
             "Mas quando os ataques começaram, algo nele começou a quebrar. Devagar… como uma rachadura que ninguém vê, mas que se espalha por dentro."
@@ -86,7 +86,7 @@ public class introducao_streamer : MonoBehaviour
         imagem1.SetActive(false);
         imagem2.SetActive(false);
 
-        // 🔹 ANIMAÇÕES
+        // ANIMAÇÕES
         animacao1.SetActive(true);
         animacao2.SetActive(true);
         yield return StartCoroutine(EscreverTexto(
@@ -98,14 +98,14 @@ public class introducao_streamer : MonoBehaviour
         animacao1.SetActive(false);
         animacao2.SetActive(false);
 
-        // 🔹 IMAGEM FINAL 1
+        // IMAGEM FINAL 1
         imagemFinal1.SetActive(true);
         yield return StartCoroutine(EscreverTexto(
             "Aos poucos, até o silêncio do estúdio começou a pesar. Cada detalhe — a luz, o espaço, o ar — parecia repetir o que ele leu, como se a própria mente estivesse contra ele."
         ));
         yield return new WaitForSeconds(tempoEntreImagens);
 
-        // 🔹 IMAGEM FINAL 2 + ZOOM
+        // IMAGEM FINAL 2 + ZOOM
         imagemFinal2.SetActive(true);
         yield return StartCoroutine(EscreverTexto(
             "Quando Eco baixa a cabeça, não é só tristeza. É a sensação de ser engolido pelos próprios pensamentos… como se nem descansando ele conseguisse se afastar do que fizeram ele acreditar."

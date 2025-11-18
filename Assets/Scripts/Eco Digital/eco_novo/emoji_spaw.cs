@@ -3,9 +3,10 @@ using UnityEngine;
 
 public class emoji_spaw : MonoBehaviour
 {
-    public Transform[] spawnPoints;        // 4 pontos de spawn
-    public GameObject[] inimigoPrefabs;    // 4 prefabs diferentes
-    public float delay = 2f;               // tempo entre cada spawn
+    public Transform[] spawnPoints;        
+    public GameObject[] inimigoPrefabs;    
+    public float delay = 2f;               // tempo ENTRE spawns
+    public float delayInicial = 2f;        // tempo ANTES de começar a spawnar
 
     private void Start()
     {
@@ -14,6 +15,9 @@ public class emoji_spaw : MonoBehaviour
 
     IEnumerator SpawnLoop()
     {
+        //AGUARDA ANTES DE COMEÇAR A GERAR INIMIGOS
+        yield return new WaitForSeconds(delayInicial);
+
         while (true)
         {
             SpawnInimigo();
@@ -23,13 +27,9 @@ public class emoji_spaw : MonoBehaviour
 
     void SpawnInimigo()
     {
-        // escolhe spawn aleatório
         int indexSpawn = Random.Range(0, spawnPoints.Length);
-
-        // escolhe prefab aleatório
         int indexPrefab = Random.Range(0, inimigoPrefabs.Length);
 
-        // instancia
         Instantiate(
             inimigoPrefabs[indexPrefab],
             spawnPoints[indexSpawn].position,

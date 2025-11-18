@@ -4,6 +4,12 @@ using UnityEngine.InputSystem;
 [RequireComponent(typeof(Rigidbody))]
 public class EcoTrabalhoController : MonoBehaviour
 {
+    // ===================== NOVO: JOYSTICK =====================
+    [Header("Joystick (Mobile)")]
+    public bool usarJoystick = false;         // ← ATIVA/DESATIVA USO DO FIXEDJOYSTICK
+    public FixedJoystick joystick;            // ← REFERÊNCIA DO JOYSTICK NA CENA
+
+
     // ===================== INPUT / CÂMERA =====================
     [Header("Input / Câmera")]
     [Tooltip("Câmera para movimento relativo; se vazio, usa Camera.main.")]
@@ -42,11 +48,11 @@ public class EcoTrabalhoController : MonoBehaviour
 
     // ===================== PRIVADOS =====================
     private Rigidbody rb;
-    private Vector2 entradaMovimentoRaw;       // valor direto do Input System (teclado/analógico)
-    private Vector2 entradaMovimentoFiltrada;  // após deadzone/histerese/compensação
-    private Vector2 entradaMovimentoSuave;     // após SmoothDamp
-    private Vector2 velSuavizacao;             // estado interno do SmoothDamp
-    private bool dentroDaZonaMorta = true;     // para histerese
+    private Vector2 entradaMovimentoRaw;       // valor direto do Input System OU joystick
+    private Vector2 entradaMovimentoFiltrada;
+    private Vector2 entradaMovimentoSuave;
+    private Vector2 velSuavizacao;
+    private bool dentroDaZonaMorta = true;
     private Vector3 ultimaDirecaoPlanar = Vector3.forward;
 
     private void Awake()
@@ -61,16 +67,26 @@ public class EcoTrabalhoController : MonoBehaviour
     }
 
     // Input System (Action "Move" como Vector2)
-    public void OnMove(InputValue valor) => entradaMovimentoRaw = valor.Get<Vector2>();
+    public void OnMove(InputValue valor)
+    {
+        if (!usarJoystick)   // ← IGNORA INPUT SYSTEM SE O JOYSTICK ESTIVER ATIVADO
+            entradaMovimentoRaw = valor.Get<Vector2>();
+    }
 
     private void FixedUpdate()
     {
-        // 1) Filtra DEADZONE com HISTERese
+        // ===================== NOVO: PEGAR INPUT DO JOYSTICK =====================
+        if (usarJoystick && joystick != null)
+        {
+            entradaMovimentoRaw = new Vector2(joystick.Horizontal, joystick.Vertical);
+        }
+
+        // 1) DEADZONE + HISTERSE
         Vector2 bruto = entradaMovimentoRaw;
         float mag = bruto.magnitude;
 
-        float limiarSair = Mathf.Clamp01(zonaMorta + Mathf.Abs(histereseZonaMorta)); // sair da zona morta
-        float limiarEntrar = Mathf.Clamp01(zonaMorta);                                // entrar (zerar)
+        float limiarSair = Mathf.Clamp01(zonaMorta + Mathf.Abs(histereseZonaMorta)); 
+        float limiarEntrar = Mathf.Clamp01(zonaMorta);
 
         if (dentroDaZonaMorta)
         {
@@ -98,7 +114,7 @@ public class EcoTrabalhoController : MonoBehaviour
             }
         }
 
-        // 2) Suavização do input
+        // 2) SUAVIZAÇÃO
         if (tempoSuavizacaoInput > 0f)
         {
             entradaMovimentoSuave = Vector2.SmoothDamp(
@@ -115,20 +131,19 @@ public class EcoTrabalhoController : MonoBehaviour
             entradaMovimentoSuave = entradaMovimentoFiltrada;
         }
 
-        // Direção unitária (ou zero)
         Vector2 unit = entradaMovimentoSuave.sqrMagnitude > 1e-6f
             ? entradaMovimentoSuave.normalized
             : Vector2.zero;
 
         float intensidade = Mathf.Clamp01(entradaMovimentoSuave.magnitude);
 
-        // 3) Converte para direção no plano (considerando câmera)
+        // 3) Converte para direção relativa à câmera
         Vector3 direcaoPlanar = CalcularDirecaoPlanarNormalizada(unit);
 
         if (direcaoPlanar.sqrMagnitude >= limiarRotacao * limiarRotacao)
             ultimaDirecaoPlanar = direcaoPlanar;
 
-        // 4) Movimento: aplica apenas XZ e preserva Y da física
+        // 4) Movimento físico
         Vector3 velocidadeDesejada = direcaoPlanar * (velocidadeMovimento * intensidade);
 
         #if UNITY_600_OR_NEWER
@@ -139,11 +154,11 @@ public class EcoTrabalhoController : MonoBehaviour
         rb.velocity = new Vector3(velocidadeDesejada.x, curVel.y, velocidadeDesejada.z);
         #endif
 
-        // 5) Rotação visual
+        // 5) Gira o modelo
         AtualizarRotacaoVisual(direcaoPlanar);
 
-        // 6) Animator
-        if (animator != null && !string.IsNullOrEmpty(nomeParametroSpeed))
+        // 6) Animação
+        if (animator != null)
             animator.SetFloat(nomeParametroSpeed, velocidadeDesejada.magnitude);
     }
 
@@ -152,6 +167,7 @@ public class EcoTrabalhoController : MonoBehaviour
         if (pivoModelo == null) return;
 
         Vector3 dir = direcaoPlanar;
+
         if (dir.sqrMagnitude < limiarRotacao * limiarRotacao)
         {
             if (!girarQuandoParado) return;
@@ -179,18 +195,13 @@ public class EcoTrabalhoController : MonoBehaviour
         if (relativoACamera && transformCamera != null)
         {
             Vector3 frente = Vector3.ProjectOnPlane(transformCamera.forward, Vector3.up).normalized;
-            if (frente.sqrMagnitude < 1e-6f) frente = Vector3.forward;
-
             Vector3 direita = Vector3.Cross(Vector3.up, frente).normalized;
-            if (direita.sqrMagnitude < 1e-6f) direita = Vector3.right;
-
-            Vector3 combinado = direita * inputUnitario.x + frente * inputUnitario.y;
-            return combinado.sqrMagnitude > 1e-6f ? combinado.normalized : Vector3.zero;
+            return (direita * inputUnitario.x + frente * inputUnitario.y).normalized;
         }
         else
         {
             Vector3 v = new Vector3(inputUnitario.x, 0f, inputUnitario.y);
-            return v.sqrMagnitude > 1e-6f ? v.normalized : Vector3.zero;
+            return v.normalized;
         }
     }
 }

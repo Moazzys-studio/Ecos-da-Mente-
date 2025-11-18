@@ -7,6 +7,6 @@ public class btns_Fases : MonoBehaviour
 {
     public void Fase_1()
     {
-      SceneManager.LoadScene("PuzzleTrabalho");
+      SceneManager.LoadScene("Introdução ecodigital");
     }
 }

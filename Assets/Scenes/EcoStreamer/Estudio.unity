@@ -1660,7 +1660,7 @@ MonoBehaviour:
   animacao2: {fileID: 235063784}
   imagemFinal1: {fileID: 2006248671}
   imagemFinal2: {fileID: 556896679}
-  tempoEntreImagens: 4
+  tempoEntreImagens: 2
   tempoAnimacao: 20
   tempoParaMudarCena: 2
   velocidadeZoom: 0.2

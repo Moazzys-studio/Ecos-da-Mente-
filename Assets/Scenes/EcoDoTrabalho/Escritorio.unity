@@ -2621,6 +2621,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: CameraSeguranca (9)
       objectReference: {fileID: 0}
+    - target: {fileID: 5394417069120692616, guid: 44b0c283db97bf6478d2a8345f2f2d55, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -10721,6 +10725,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: ApontarSupervisor
       objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 777f25c74c36cac49950b7a74da9dc85, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -11315,6 +11323,10 @@ PrefabInstance:
     - target: {fileID: 2992197886716779213, guid: e4fbe54ba8fbd594bb1b7d44a47f4cf8, type: 3}
       propertyPath: m_Name
       value: PortaSupervisor
+      objectReference: {fileID: 0}
+    - target: {fileID: 2992197886716779213, guid: e4fbe54ba8fbd594bb1b7d44a47f4cf8, type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 3368094595176619013, guid: e4fbe54ba8fbd594bb1b7d44a47f4cf8, type: 3}
       propertyPath: cameraVCam
@@ -12724,6 +12736,10 @@ PrefabInstance:
     - target: {fileID: 919132149155446097, guid: 2d677a13da4a33b4c9c36340f85c2116, type: 3}
       propertyPath: m_Name
       value: Escritorios (27)
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 2d677a13da4a33b4c9c36340f85c2116, type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects:
@@ -22062,6 +22078,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: SaidaDeAr (14)
       objectReference: {fileID: 0}
+    - target: {fileID: 8190965640003104798, guid: 9a1aaedfe6a787c48bb0c1eec93f8f0a, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 8856319280596183716, guid: 9a1aaedfe6a787c48bb0c1eec93f8f0a, type: 3}
       propertyPath: m_LocalPosition.x
       value: 7.2271996
@@ -24473,6 +24493,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Idle (2)
       objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: b2962ba4886420740bc8c679afec4d47, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -25351,6 +25375,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: CameraSeguranca (10)
       objectReference: {fileID: 0}
+    - target: {fileID: 5394417069120692616, guid: 44b0c283db97bf6478d2a8345f2f2d55, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -25702,22 +25730,6 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1465286656}
     m_Modifications:
-    - target: {fileID: -7493596028755563170, guid: 5455f59d577ea1b46b5f464ced9743f0, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 2.365358
-      objectReference: {fileID: 0}
-    - target: {fileID: -5477749408508380018, guid: 5455f59d577ea1b46b5f464ced9743f0, type: 3}
-      propertyPath: m_LocalScale.y
-      value: 209.65945
-      objectReference: {fileID: 0}
-    - target: {fileID: -5477749408508380018, guid: 5455f59d577ea1b46b5f464ced9743f0, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: -0.14
-      objectReference: {fileID: 0}
-    - target: {fileID: -4292154010595695564, guid: 5455f59d577ea1b46b5f464ced9743f0, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 2.365358
-      objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 159a5207936ff414dad82373f3ad5cce, type: 3}
       propertyPath: m_LocalScale.x
       value: 0.6464499
@@ -25845,6 +25857,22 @@ PrefabInstance:
     - target: {fileID: 9017328541939089309, guid: 159a5207936ff414dad82373f3ad5cce, type: 3}
       propertyPath: m_Name
       value: PortaDireita
+      objectReference: {fileID: 0}
+    - target: {fileID: -7493596028755563170, guid: 5455f59d577ea1b46b5f464ced9743f0, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 2.365358
+      objectReference: {fileID: 0}
+    - target: {fileID: -5477749408508380018, guid: 5455f59d577ea1b46b5f464ced9743f0, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 209.65945
+      objectReference: {fileID: 0}
+    - target: {fileID: -5477749408508380018, guid: 5455f59d577ea1b46b5f464ced9743f0, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -0.14
+      objectReference: {fileID: 0}
+    - target: {fileID: -4292154010595695564, guid: 5455f59d577ea1b46b5f464ced9743f0, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 2.365358
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects:
@@ -34050,6 +34078,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Sofa
       objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 622cab3503b45e645a60a6a35e8a02e2, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -37540,6 +37572,10 @@ PrefabInstance:
     - target: {fileID: 3724704804431612128, guid: c4e589a85c0f7f149be40458f8217023, type: 3}
       propertyPath: m_Layer
       value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 3724704804431612128, guid: c4e589a85c0f7f149be40458f8217023, type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 3975474802415082613, guid: c4e589a85c0f7f149be40458f8217023, type: 3}
       propertyPath: m_LocalScale.x
@@ -44072,6 +44108,10 @@ PrefabInstance:
     - target: {fileID: 7731765125881153137, guid: 9e3641e7852237d4a9a1c4222266ca6f, type: 3}
       propertyPath: m_Name
       value: Abajur2
+      objectReference: {fileID: 0}
+    - target: {fileID: 7731765125881153137, guid: 9e3641e7852237d4a9a1c4222266ca6f, type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

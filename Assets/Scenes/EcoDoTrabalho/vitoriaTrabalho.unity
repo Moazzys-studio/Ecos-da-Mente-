@@ -631,7 +631,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 1273069037}
         m_TargetAssemblyTypeName: btns_ecoStreamer, Assembly-CSharp
-        m_MethodName: sair_trabalho
+        m_MethodName: Menu_trabalho
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}

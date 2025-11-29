@@ -9,12 +9,23 @@ public class btns_menu : MonoBehaviour
     public GameObject tutorial;
     public GameObject fases;
     public GameObject config;
+    public static bool Fases_tela = false;
     void Start()
     {
         creditos.SetActive(false);
         tutorial.SetActive(false);
         fases.SetActive(false);
         config.SetActive(false);
+        
+    }
+
+    void Update()
+    {
+        if(Fases_tela == true)
+        {
+          fases.SetActive(true);
+        }
+
     }
 
     public void Creditos()

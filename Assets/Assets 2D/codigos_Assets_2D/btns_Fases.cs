@@ -2,19 +2,66 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 public class btns_Fases : MonoBehaviour
 {
+    public Button btnFase1;
+    public Button btnFase2;
+    public Button btnFase3;
+
+    void Start()
+    {
+        AtualizarBotoes();
+    }
+
+    void AtualizarBotoes()
+    {
+        // FASE 1
+        if (variaveis_banco.ganhoudigital == true)
+        {
+            btnFase1.interactable = false;
+            DeixarTransparente(btnFase1);
+        }
+
+        // FASE 2
+        if (variaveis_banco.ganhoutrabalho == true)
+        {
+            btnFase2.interactable = false;
+            DeixarTransparente(btnFase2);
+        }
+
+        // FASE 3
+        if (variaveis_banco.ganhoustreamer == true)
+        {
+            btnFase3.interactable = false;
+            DeixarTransparente(btnFase3);
+        }
+    }
+
+    void DeixarTransparente(Button btn)
+    {
+        Color c = btn.image.color;
+        c.a = 0.3f;         // transparência
+        btn.image.color = c;
+    }
+
+    // --------------------
+    // BOTÕES DAS FASES
+    // --------------------
     public void Fase_1()
     {
-      SceneManager.LoadScene("Introdução ecodigital");
+        SceneManager.LoadScene("Introdução ecodigital");
     }
+
     public void Fase_2()
     {
-      SceneManager.LoadScene("Introdução do trabalho");
+        SceneManager.LoadScene("Introdução do trabalho");
     }
+
     public void Fase_3()
     {
-      SceneManager.LoadScene("Estudio");
+        btns_menu.Fases_tela = true;
+        SceneManager.LoadScene("StreamerGanhou");
     }
 }

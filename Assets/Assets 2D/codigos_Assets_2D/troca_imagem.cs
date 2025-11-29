@@ -1,33 +1,50 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.InputSystem;                
-using UnityEngine.InputSystem.EnhancedTouch; 
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.EnhancedTouch;
 
 public class troca_imagem : MonoBehaviour
 {
     public Image imagem;
     public Sprite novaImagem;
-    public bool mudou_CD1 = false;
+
+    public static bool mudou_CD1 = false;
+    public static bool objetoJaDestruido = false; // <-- memória de destruição
+
     public float duracaoAnimacao = 1f;
+    public float delayInicio = 1f;
+
+    private bool animacaoRodando = false;
+
+    void Start()
+    {
+        // Se o objeto já foi destruído anteriormente, destrói imediatamente
+        if (objetoJaDestruido)
+        {
+            Destroy(gameObject);
+            return;
+        }
+    }
 
     void Update()
     {
-        
         if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
         {
             mudou_CD1 = true;
         }
 
-        if (mudou_CD1)
+        if (mudou_CD1 && !animacaoRodando)
         {
             StartCoroutine(TrocarEAnimar());
-            mudou_CD1 = false;
+            animacaoRodando = true;
         }
     }
 
     private IEnumerator TrocarEAnimar()
     {
+        yield return new WaitForSeconds(delayInicio);
+
         imagem.sprite = novaImagem;
 
         Color cor = imagem.color;
@@ -45,6 +62,9 @@ public class troca_imagem : MonoBehaviour
             yield return null;
         }
 
-        gameObject.SetActive(false);
+        // Marca como destruído permanentemente
+        objetoJaDestruido = true;
+
+        Destroy(gameObject);
     }
 }

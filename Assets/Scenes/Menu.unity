@@ -577,7 +577,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &106936192
 RectTransform:
   m_ObjectHideFlags: 0
@@ -685,8 +685,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   imagem: {fileID: 106936195}
   novaImagem: {fileID: -134215716, guid: d5f60f68629719f42bfbc0510f4c8b32, type: 3}
-  mudou_CD1: 0
   duracaoAnimacao: 1
+  delayInicio: 0.1
 --- !u!1 &116267889
 GameObject:
   m_ObjectHideFlags: 0
@@ -748,6 +748,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c230ef3db51011f4f8051035edf3ab0d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  btnFase1: {fileID: 1862727105}
+  btnFase2: {fileID: 817268094}
+  btnFase3: {fileID: 417134002}
 --- !u!1001 &144785357
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -4638,7 +4641,7 @@ GameObject:
   - component: {fileID: 1294425798}
   - component: {fileID: 1294425797}
   m_Layer: 5
-  m_Name: Tutorial
+  m_Name: Novo serve
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -4754,7 +4757,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: -1713563756, guid: e8d37598bb0b4184da3f947058ff5feb, type: 3}
+  m_Sprite: {fileID: 482446509, guid: f957b6b4fbdb47f4f8a5d5952f7c28bf, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -5437,7 +5440,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &1764308711
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5622,7 +5625,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &1814762264
 RectTransform:
   m_ObjectHideFlags: 0
@@ -5725,13 +5728,13 @@ MonoBehaviour:
   m_GameObject: {fileID: 1814762263}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a3d93981ac1458b488901ceeb57a1e5d, type: 3}
+  m_Script: {fileID: 11500000, guid: 7fb45882ed1e3b0429381d4f6bba14c8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   imagem: {fileID: 1814762267}
   novaImagem: {fileID: -1622644967, guid: d5f60f68629719f42bfbc0510f4c8b32, type: 3}
-  mudou_CD1: 0
   duracaoAnimacao: 1
+  delayInicio: 0.1
 --- !u!1 &1862727102
 GameObject:
   m_ObjectHideFlags: 0

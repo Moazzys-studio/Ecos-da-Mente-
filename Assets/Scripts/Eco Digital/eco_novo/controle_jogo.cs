@@ -56,6 +56,10 @@ public class controle_jogo : MonoBehaviour
         // ---------------- CHECA VITÓRIA (CONFIANÇA MÁXIMA) ----------------
         if (Ecodigital_variaveisglobal.objetosDestruidosSemAcertar >= confiancaMaxima)
         {
+            variaveis_banco.ganhoudigital = true;
+            variaveis_banco.SalvarBanco();
+            btns_menu.Fases_tela = true;
+            troca_imagem.mudou_CD1 = true;
             SceneManager.LoadScene("DigitalGanhou");
         }
     }

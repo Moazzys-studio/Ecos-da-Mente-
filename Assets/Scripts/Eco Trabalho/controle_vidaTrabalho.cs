@@ -59,6 +59,10 @@ public class controle_vidaTrabalho : MonoBehaviour
         // venceu
         if (acertos >= acertosParaVencer)
         {
+            variaveis_banco.ganhoutrabalho = true;
+            variaveis_banco.SalvarBanco();
+            btns_menu.Fases_tela = true;
+            troca_imagem2.mudou_CD2 = true;
             SceneManager.LoadScene("vitoriaTrabalho");
         }
     }

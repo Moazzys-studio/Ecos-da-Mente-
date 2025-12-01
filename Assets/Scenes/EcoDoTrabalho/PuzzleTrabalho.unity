@@ -14174,7 +14174,7 @@ MonoBehaviour:
   limiteMin: -116.353
   limiteMax: -65.461
   sensibilidadeAcelerometro: 80
-  sensibilidadeTeclado: 120
+  sensibilidadeTeclado: 80
   margemLimite: 10
   intervaloVibracao: 0.15
 --- !u!114 &1688326357

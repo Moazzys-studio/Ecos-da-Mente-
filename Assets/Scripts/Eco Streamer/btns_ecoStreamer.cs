@@ -37,22 +37,22 @@ public class btns_ecoStreamer : MonoBehaviour
 
     public void Menu_digital()
     {
-      variaveis_banco.ganhoudigital = true;
-      btns_menu.Fases_tela = true;
-      troca_imagem.mudou_CD1 = true;
+      //variaveis_banco.ganhoudigital = true;
+      //btns_menu.Fases_tela = true;
+      //troca_imagem.mudou_CD1 = true;
       SceneManager.LoadScene("Menu");
     }
      public void Menu_trabalho()
     {
-      variaveis_banco.ganhoutrabalho = true;
-      btns_menu.Fases_tela = true;
-      troca_imagem2.mudou_CD2 = true;
+      // variaveis_banco.ganhoutrabalho = true;
+      // btns_menu.Fases_tela = true;
+      // troca_imagem2.mudou_CD2 = true;
       SceneManager.LoadScene("Menu");
     }
      public void Menu_streame()
     {
-      variaveis_banco.ganhoustreamer = true;
-      btns_menu.Fases_tela = true;
+      //variaveis_banco.ganhoustreamer = true;
+      //btns_menu.Fases_tela = true;
       SceneManager.LoadScene("Menu");
     }
     

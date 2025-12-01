@@ -15,36 +15,64 @@ public class btns_Fases : MonoBehaviour
         AtualizarBotoes();
     }
 
+    void Update()
+   {
+    AtualizarBotoes();
+   }
+
     void AtualizarBotoes()
+{
+    // -------- FASE 1 --------
+    if (variaveis_banco.ganhoudigital == true)
     {
-        // FASE 1
-        if (variaveis_banco.ganhoudigital == true)
-        {
-            btnFase1.interactable = false;
-            DeixarTransparente(btnFase1);
-        }
-
-        // FASE 2
-        if (variaveis_banco.ganhoutrabalho == true)
-        {
-            btnFase2.interactable = false;
-            DeixarTransparente(btnFase2);
-        }
-
-        // FASE 3
-        if (variaveis_banco.ganhoustreamer == true)
-        {
-            btnFase3.interactable = false;
-            DeixarTransparente(btnFase3);
-        }
+        btnFase1.interactable = false;
+        DeixarTransparente(btnFase1);
+    }
+    else
+    {
+        btnFase1.interactable = true;
+        DeixarOpaco(btnFase1);
     }
 
-    void DeixarTransparente(Button btn)
+    // -------- FASE 2 --------
+    if (variaveis_banco.ganhoutrabalho == true)
     {
-        Color c = btn.image.color;
-        c.a = 0.3f;         // transparência
-        btn.image.color = c;
+        btnFase2.interactable = false;
+        DeixarTransparente(btnFase2);
     }
+    else
+    {
+        btnFase2.interactable = true;
+        DeixarOpaco(btnFase2);
+    }
+
+    // -------- FASE 3 --------
+    if (variaveis_banco.ganhoustreamer == true)
+    {
+        btnFase3.interactable = false;
+        DeixarTransparente(btnFase3);
+    }
+    else
+    {
+        btnFase3.interactable = true;
+        DeixarOpaco(btnFase3);
+    }
+}
+
+// --- Funções extras ---
+void DeixarTransparente(Button btn)
+{
+    Color c = btn.image.color;
+    c.a = 0.3f;
+    btn.image.color = c;
+}
+
+void DeixarOpaco(Button btn)
+{
+    Color c = btn.image.color;
+    c.a = 1f;
+    btn.image.color = c;
+}
 
     // --------------------
     // BOTÕES DAS FASES
@@ -62,6 +90,6 @@ public class btns_Fases : MonoBehaviour
     public void Fase_3()
     {
         btns_menu.Fases_tela = true;
-        SceneManager.LoadScene("StreamerGanhou");
+        SceneManager.LoadScene("Estudio");
     }
 }

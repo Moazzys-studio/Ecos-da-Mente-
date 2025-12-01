@@ -43,7 +43,7 @@ public class controle_inimigos : MonoBehaviour
     }
 
     // =============================================================
-    // 🔥 Zerar coletável e resetar material do inimigo atual
+    // Zerar coletável e resetar material do inimigo atual
     // =============================================================
     private void ResetarColetavelEAparencia()
     {
@@ -55,7 +55,7 @@ public class controle_inimigos : MonoBehaviour
     }
 
     // =============================================================
-    // 🔥 Pula inimigos que já não existem na cena
+    // Pula inimigos que já não existem na cena
     // =============================================================
     private void VerificarInimigoValido()
     {
@@ -76,7 +76,7 @@ public class controle_inimigos : MonoBehaviour
     }
 
     // =============================================================
-    // ✨ Quando o jogador coleta algo
+    // Quando o jogador coleta algo
     // =============================================================
     public void OnCollectiblePicked()
     {
@@ -157,7 +157,9 @@ public class controle_inimigos : MonoBehaviour
             yield return new WaitForSeconds(1f);
             tempo--;
         }
-
+        variaveis_banco.ganhoustreamer = true;
+        variaveis_banco.SalvarBanco();
+        btns_menu.Fases_tela = true;
         SceneManager.LoadScene("StreamerGanhou");
     }
 }

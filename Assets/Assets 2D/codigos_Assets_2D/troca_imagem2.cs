@@ -20,7 +20,7 @@ public class troca_imagem2 : MonoBehaviour
     void Start()
     {
         // Se já foi destruído uma vez, se destrói de novo imediatamente
-        if (objetoJaDestruido)
+         if (objetoJaDestruido || variaveis_banco.ganhoustreamer == true)
         {
             Destroy(gameObject);
             return;

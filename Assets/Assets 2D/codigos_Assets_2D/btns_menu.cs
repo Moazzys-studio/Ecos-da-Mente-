@@ -44,6 +44,7 @@ public class btns_menu : MonoBehaviour
     }
     public void voltar_menu()
     {
+        Fases_tela = false;
         creditos.SetActive(false);
         tutorial.SetActive(false);
         fases.SetActive(false);

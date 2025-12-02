@@ -46,9 +46,6 @@ public class creditos : MonoBehaviour
         if (imagemUI.anchoredPosition == posicaoFinal)
         {
             chegou = true;
-
-            if (objetoParaAtivar != null)
-                objetoParaAtivar.SetActive(true);
         }
     }
 
@@ -63,8 +60,6 @@ public class creditos : MonoBehaviour
         chegou = false;
         podeSubir = false;
 
-        if (objetoParaAtivar != null)
-            objetoParaAtivar.SetActive(false);
     }
 
     public void FecharCreditos()

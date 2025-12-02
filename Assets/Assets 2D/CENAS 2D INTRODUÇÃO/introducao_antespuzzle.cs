@@ -12,6 +12,7 @@ public class introducao_antespuzzle : MonoBehaviour
 
     [Header("Canvas da introdução")]
     public GameObject canvasIntroducao;
+    public GameObject Canvainfo;
 
     [Header("Texto da Narrativa")]
     public TMP_Text textoNarracao;
@@ -35,7 +36,6 @@ public class introducao_antespuzzle : MonoBehaviour
     {
         // TRAVA O JOGO ENQUANTO A INTRODUÇÃO ESTIVER ATIVA
         Time.timeScale = 0f;
-
         StartCoroutine(Sequencia());
     }
 
@@ -121,7 +121,9 @@ public class introducao_antespuzzle : MonoBehaviour
         imagem4.SetActive(false);
 
         yield return StartCoroutine(FadeOutTexto());
-
+        Time.timeScale = 1f;
+        controle_info.podeComecarIntro = true;
         canvasIntroducao.SetActive(false);
+        
     }
 }

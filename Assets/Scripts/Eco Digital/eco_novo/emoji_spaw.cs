@@ -3,10 +3,16 @@ using UnityEngine;
 
 public class emoji_spaw : MonoBehaviour
 {
-    public Transform[] spawnPoints;        
-    public GameObject[] inimigoPrefabs;    
-    public float delay = 2f;               // tempo ENTRE spawns
-    public float delayInicial = 2f;        // tempo ANTES de começar a spawnar
+     [Header("Configuração do Spawn")]
+    public Transform[] spawnPoints;
+    public GameObject[] inimigoPrefabs;
+
+    [Header("Tempos")]
+    public float delay = 2f;         // tempo ENTRE spawns
+    public float delayInicial = 2f;  // tempo ANTES de começar a spawnar
+
+    // 🔥 Variável global que libera o spawn
+    public static bool podeSpawnar = false;
 
     private void Start()
     {
@@ -15,7 +21,13 @@ public class emoji_spaw : MonoBehaviour
 
     IEnumerator SpawnLoop()
     {
-        //AGUARDA ANTES DE COMEÇAR A GERAR INIMIGOS
+        // 🔥 Aguarda até que o controle_info ative a variável
+        while (podeSpawnar == false)
+        {
+            yield return null; // espera 1 frame
+        }
+
+        // Quando liberar, espera o delay inicial
         yield return new WaitForSeconds(delayInicial);
 
         while (true)

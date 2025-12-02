@@ -1,8 +1,7 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.InputSystem;                
-using UnityEngine.InputSystem.EnhancedTouch; 
+using UnityEngine.InputSystem;
 
 public class troca_imagem2 : MonoBehaviour
 {
@@ -10,7 +9,6 @@ public class troca_imagem2 : MonoBehaviour
     public Sprite novaImagem;
 
     public static bool mudou_CD2 = false;
-    public static bool objetoJaDestruido = false; // <-- memória do objeto destruído
 
     public float duracaoAnimacao = 1f;
     public float delayInicio = 1f;
@@ -19,8 +17,13 @@ public class troca_imagem2 : MonoBehaviour
 
     void Start()
     {
-        // Se já foi destruído uma vez, se destrói de novo imediatamente
-         if (objetoJaDestruido || variaveis_banco.ganhoustreamer == true)
+        // Se já ganhou a fase digital, a imagem NÃO APARECE
+        if (variaveis_banco.ganhoustreamer == true)
+        {
+            Destroy(gameObject);
+            return;
+        }
+        else if (variaveis_banco.ganhoutrabalho == true)
         {
             Destroy(gameObject);
             return;
@@ -62,8 +65,9 @@ public class troca_imagem2 : MonoBehaviour
             yield return null;
         }
 
-        // Marca que o objeto foi destruído PERMANENTEMENTE
-        objetoJaDestruido = true;
+        // SALVA PERMANENTEMENTE
+        variaveis_banco.ganhoustreamer = true;
+        variaveis_banco.SalvarBanco();
 
         Destroy(gameObject);
     }

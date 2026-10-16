@@ -3,16 +3,12 @@ using UnityEngine;
 
 public class emoji_spaw : MonoBehaviour
 {
-     [Header("Configuração do Spawn")]
+    [Header("Configuração do Spawn")]
     public Transform[] spawnPoints;
     public GameObject[] inimigoPrefabs;
 
     [Header("Tempos")]
-    public float delay = 2f;         // tempo ENTRE spawns
-    public float delayInicial = 2f;  // tempo ANTES de começar a spawnar
-
-    // 🔥 Variável global que libera o spawn
-    public static bool podeSpawnar = false;
+    public float delay = 2f;
 
     private void Start()
     {
@@ -21,24 +17,25 @@ public class emoji_spaw : MonoBehaviour
 
     IEnumerator SpawnLoop()
     {
-        // 🔥 Aguarda até que o controle_info ative a variável
-        while (podeSpawnar == false)
-        {
-            yield return null; // espera 1 frame
-        }
+        // Spawn imediatamente ao iniciar a cena
+        SpawnInimigo();
 
-        // Quando liberar, espera o delay inicial
-        yield return new WaitForSeconds(delayInicial);
-
+        // Continua spawnando a cada X segundos
         while (true)
         {
-            SpawnInimigo();
             yield return new WaitForSeconds(delay);
+            SpawnInimigo();
         }
     }
 
     void SpawnInimigo()
     {
+        if (spawnPoints.Length == 0 || inimigoPrefabs.Length == 0)
+        {
+            Debug.LogWarning("Não existem spawn points ou prefabs configurados.");
+            return;
+        }
+
         int indexSpawn = Random.Range(0, spawnPoints.Length);
         int indexPrefab = Random.Range(0, inimigoPrefabs.Length);
 

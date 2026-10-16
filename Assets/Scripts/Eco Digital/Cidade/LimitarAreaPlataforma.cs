@@ -59,7 +59,7 @@ public class LimitarAreaPlataforma : MonoBehaviour
 #if UNITY_600_OR_NEWER
     private Vector3 Vel { get => rb.linearVelocity; set => rb.linearVelocity = value; }
 #else
-    private Vector3 Vel { get => rb.velocity; set => rb.velocity = value; }
+    private Vector3 Vel { get => rb.linearVelocity; set => rb.linearVelocity = value; }
 #endif
 
     private void Awake()

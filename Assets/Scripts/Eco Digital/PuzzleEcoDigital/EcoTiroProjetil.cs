@@ -27,7 +27,7 @@ public class EcoTiroProjetil : MonoBehaviour
             ? direcaoNormalizada.normalized
             : transform.forward;
 
-        _rb.velocity = dir * Mathf.Max(0.1f, velocidade);
+        _rb.linearVelocity = dir * Mathf.Max(0.1f, velocidade);
         transform.rotation = Quaternion.LookRotation(dir, Vector3.up) * Quaternion.Euler(0f, 180f, 0f);
 
 

@@ -150,8 +150,8 @@ public class EcoTrabalhoController : MonoBehaviour
         Vector3 curVel = rb.linearVelocity;
         rb.linearVelocity = new Vector3(velocidadeDesejada.x, curVel.y, velocidadeDesejada.z);
         #else
-        Vector3 curVel = rb.velocity;
-        rb.velocity = new Vector3(velocidadeDesejada.x, curVel.y, velocidadeDesejada.z);
+        Vector3 curVel = rb.linearVelocity;
+        rb.linearVelocity = new Vector3(velocidadeDesejada.x, curVel.y, velocidadeDesejada.z);
         #endif
 
         // 5) Gira o modelo

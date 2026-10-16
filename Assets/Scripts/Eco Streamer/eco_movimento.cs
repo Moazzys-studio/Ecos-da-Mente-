@@ -94,11 +94,11 @@ public class eco_movimento : MonoBehaviour
     {
         float vy = _subindo ? velocidadeVertical : -velocidadeVertical;
 
-        Vector3 v = _rb.velocity;
+        Vector3 v = _rb.linearVelocity;
         v.x = 0f;
         v.z = 0f;
         v.y = Mathf.Clamp(vy, -maxVelocidadeVertical, maxVelocidadeVertical);
-        _rb.velocity = v;
+        _rb.linearVelocity = v;
     }
 
     private void IniciarRotacaoSuave()
@@ -148,20 +148,20 @@ public class eco_movimento : MonoBehaviour
 
         if (noChaoAgora && !_subindo)
         {
-            var v = _rb.velocity; v.y = 0f; _rb.velocity = v;
+            var v = _rb.linearVelocity; v.y = 0f; _rb.linearVelocity = v;
         }
         else if (_subindo && EstaEncostadoAcima())
         {
-            var v = _rb.velocity; v.y = 0f; _rb.velocity = v;
+            var v = _rb.linearVelocity; v.y = 0f; _rb.linearVelocity = v;
         }
         else
         {
             if (!_subindo && !noChaoAgora)
             {
-                Vector3 v = _rb.velocity;
+                Vector3 v = _rb.linearVelocity;
                 v.y -= gravidade * Time.fixedDeltaTime;
                 v.y = Mathf.Clamp(v.y, -maxVelocidadeVertical, maxVelocidadeVertical);
-                _rb.velocity = v;
+                _rb.linearVelocity = v;
             }
         }
     }
@@ -183,7 +183,7 @@ public class eco_movimento : MonoBehaviour
         Eco_Streamer_Variaveis.vida_ecoStreamer--;
         // Reseta posição e velocidade
         transform.position = posicaoInicial;
-        _rb.velocity = Vector3.zero;
+        _rb.linearVelocity = Vector3.zero;
         _subindo = false;
 
         // Garante que o personagem volte com rotação padrão (em pé)
@@ -212,7 +212,7 @@ public class eco_movimento : MonoBehaviour
 
         // Reseta posição e velocidade
         transform.position = posicaoInicial;
-        _rb.velocity = Vector3.zero;
+        _rb.linearVelocity = Vector3.zero;
         _subindo = false;
 
         // Garante que o personagem volte com rotação padrão (em pé)

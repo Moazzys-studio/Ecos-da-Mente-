@@ -11,6 +11,7 @@ public class controle_info : MonoBehaviour
     public float tempoDaImagem = 3f;
 
     public static bool podeComecarIntro;
+
     void Start()
     {
         StartCoroutine(IniciarComPausa());
@@ -23,10 +24,10 @@ public class controle_info : MonoBehaviour
         if (imagemIntro != null)
             imagemIntro.SetActive(true);
 
-        //Aguarda até que a variável global esteja TRUE
+        // Aguarda até que a variável global esteja TRUE
         while (!podeComecarIntro)
         {
-            yield return null; // espera 1 frame
+            yield return null;
         }
 
         // Agora sim começa a contar o tempo
@@ -36,8 +37,5 @@ public class controle_info : MonoBehaviour
             imagemIntro.SetActive(false);
 
         Time.timeScale = 1f;
-
-        // Libera o spawn
-        emoji_spaw.podeSpawnar = true;
     }
 }

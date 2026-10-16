@@ -231,8 +231,8 @@ public class EcoDigitalController : MonoBehaviour
             direcaoPlanar.z * velocidadeBase * intensidade
         );
 #else
-        Vector3 curVel = rb.velocity;
-        rb.velocity = new Vector3(
+        Vector3 curVel = rb.linearVelocity;
+        rb.linearVelocity = new Vector3(
             direcaoPlanar.x * velocidadeBase * intensidade,
             curVel.y,
             direcaoPlanar.z * velocidadeBase * intensidade
